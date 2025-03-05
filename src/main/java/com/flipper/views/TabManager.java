@@ -14,13 +14,10 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
-import com.flipper.api.Api;
 import com.flipper.helpers.UiUtilities;
-import com.flipper.views.alchs.AlchPage;
 import com.flipper.views.components.Tab;
 import com.flipper.views.flips.FlipPage;
-import com.flipper.views.login.LoginPage;
-import com.flipper.views.margins.MarginPage;
+import com.flipper.views.inprogress.InProgressPage; // MODIFIED IMPORT - Changed from MarginPage
 import com.flipper.views.transactions.TransactionPage;
 
 import net.runelite.client.ui.ColorScheme;
@@ -29,21 +26,20 @@ import net.runelite.client.ui.components.materialtabs.MaterialTabGroup;
 import net.runelite.client.util.ImageUtil;
 
 public class TabManager extends PluginPanel {
-    private Runnable changeToLoggedOutView;
 
     public TabManager() {
         super(false);
         this.setLayout(new BorderLayout());
     }
 
-    private JPanel constructTopBar(boolean isLoggedIn) {
+    private JPanel constructTopBar() {
         JPanel container = new JPanel();
         container.setBackground(ColorScheme.DARK_GRAY_COLOR);
         container.setLayout(new BorderLayout());
         container.setBorder(new EmptyBorder(0, 0, 5, 0));
         JPanel topBar = new JPanel();
         topBar.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        int columns = isLoggedIn ? 4 : 3;
+        int columns = 3;
         topBar.setLayout(new GridLayout(1, columns));
 
         // Discord
@@ -100,59 +96,28 @@ public class TabManager extends PluginPanel {
         website.setIcon(websiteIcon);
         topBar.add(website);
 
-        // Logout
-        if (isLoggedIn) {
-            JLabel logout = new JLabel();
-            logout.setToolTipText("Logout of " + Api.loginResponse.user.getDisplayName());
-            logout.setHorizontalAlignment(JLabel.CENTER);
-
-            logout.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    try {
-                        changeToLoggedOutView.run();
-                    } catch (Exception error) {}
-                }
-            });
-            ImageIcon logoutIcon = new ImageIcon(ImageUtil.loadImageResource(getClass(), UiUtilities.logoutIcon));
-            logout.setIcon(logoutIcon);
-            topBar.add(logout);
-        }
-
         container.add(topBar);
         container.setBorder(new EmptyBorder(3, 0, 5, 0));
         return container;
     }
 
     public void renderLoggedInView(
-        TransactionPage buyPage, 
-        TransactionPage sellPage, 
-        FlipPage flipPage, 
-        AlchPage alchPage,
-        MarginPage marginPage, 
-        Runnable changeToLoggedOutView
+            TransactionPage buyPage,
+            TransactionPage sellPage,
+            FlipPage flipPage,
+            InProgressPage inProgressPage
     ) {
-        this.changeToLoggedOutView = changeToLoggedOutView;
         SwingUtilities.invokeLater(() -> {
             this.removeAll();
-            JPanel topBar = this.constructTopBar(true);
+            JPanel topBar = this.constructTopBar();
             JPanel display = new JPanel();
             JPanel header = new JPanel(new BorderLayout());
             header.setBorder(new EmptyBorder(5, 0, 0, 0));
             MaterialTabGroup tabGroup = new MaterialTabGroup(display);
-            Tab buysTab = new Tab("Buys", tabGroup, buyPage);
-            Tab sellsTab = new Tab("Sells", tabGroup, sellPage);
-            Tab flipsTab = new Tab("Flips", tabGroup, flipPage);
-            Tab alchsTab = new Tab("Alchs", tabGroup, alchPage);
-            Tab marginsTab = new Tab("Margins", tabGroup, marginPage);
+            Tab inProgressTab = new Tab("In Progress", tabGroup, inProgressPage); // MODIFIED - Changed Tab Label and Page
             tabGroup.setBorder(new EmptyBorder(5, 0, 2, 0));
-            tabGroup.addTab(buysTab);
-            tabGroup.addTab(sellsTab);
-            tabGroup.addTab(flipsTab);
-            tabGroup.addTab(alchsTab);
-            tabGroup.addTab(marginsTab);
-            // Initialize with buys tab open.
-            tabGroup.select(buysTab);
+            tabGroup.addTab(inProgressTab); // MODIFIED - Added InProgressTab
+            tabGroup.select(inProgressTab); // Select inProgressTab
             JPanel tabGroupContainer = new JPanel();
             tabGroupContainer.setBackground(ColorScheme.DARKER_GRAY_COLOR.darker());
             tabGroupContainer.add(tabGroup);
@@ -163,14 +128,4 @@ public class TabManager extends PluginPanel {
             this.revalidate();
         });
     }
-
-    public void renderLoggedOutView(LoginPage loginPage) {
-        SwingUtilities.invokeLater(() -> {
-            this.removeAll();
-            JPanel topBar = this.constructTopBar(false);
-            add(topBar, BorderLayout.NORTH);
-            add(loginPage, BorderLayout.CENTER);
-            this.revalidate();
-        });
-    }
-};
+}

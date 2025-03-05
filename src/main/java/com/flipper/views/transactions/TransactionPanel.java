@@ -16,7 +16,6 @@ import com.flipper.helpers.UiUtilities;
 import com.flipper.helpers.Numbers;
 import com.flipper.helpers.Timestamps;
 import com.flipper.models.Transaction;
-import com.flipper.views.components.AmountProgressBar;
 import com.flipper.views.components.DeleteButton;
 import com.flipper.views.components.ItemHeader;
 import com.google.common.base.Supplier;
@@ -24,6 +23,7 @@ import com.google.common.base.Supplier;
 import net.runelite.api.ItemComposition;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.ColorScheme;
+import net.runelite.client.callback.ClientThread;
 
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -33,56 +33,41 @@ public class TransactionPanel extends JPanel {
 
     private final int LABEL_COUNT = 3;
 
-    private JPanel leftInfoTextPanel = new JPanel(new GridLayout(LABEL_COUNT, 1));
-    private JPanel rightValuesPanel = new JPanel(new GridLayout(LABEL_COUNT, 1));
+    private JPanel leftInfoTextPanel;
+    private JPanel rightValuesPanel;
 
     private Transaction transaction;
-    private Supplier<JButton> renderExtraComponentSupplier;
-    private Consumer<Transaction> extraComponentPressedConsumer;
+
+    private final ClientThread clientThread;
 
     public TransactionPanel(
-        String name, 
-        Transaction transaction, 
-        ItemManager itemManager, 
-        Consumer<UUID> removeTransactionConsumer,
-        boolean isPrompt,
-        Supplier<JButton> renderExtraComponentSupplier,
-        Consumer<Transaction> extraComponentPressedConsumer
-    ) { 
-        this.renderExtraComponentSupplier = renderExtraComponentSupplier;
-        this.extraComponentPressedConsumer = extraComponentPressedConsumer;
-        init(
-            name,
-            transaction,
-            itemManager,
-            removeTransactionConsumer,
-            isPrompt
-        );
-    }
-
-    public TransactionPanel(
-        String name, 
-        Transaction transaction, 
-        ItemManager itemManager, 
-        Consumer<UUID> removeTransactionConsumer,
-        boolean isPrompt
+            String name,
+            Transaction transaction,
+            ItemManager itemManager,
+            Consumer<UUID> removeTransactionConsumer,
+            boolean isPrompt,
+            ClientThread clientThread
     ) {
+        this.clientThread = clientThread;
         init(
-            name,
-            transaction,
-            itemManager,
-            removeTransactionConsumer,
-            isPrompt
+                name,
+                transaction,
+                itemManager,
+                removeTransactionConsumer,
+                isPrompt
         );
     }
 
     private void init(
-        String name, 
-        Transaction transaction, 
-        ItemManager itemManager, 
-        Consumer<UUID> removeTransactionConsumer,
-        boolean isPrompt
+            String name,
+            Transaction transaction,
+            ItemManager itemManager,
+            Consumer<UUID> removeTransactionConsumer,
+            boolean isPrompt
     ) {
+        leftInfoTextPanel = new JPanel(new GridLayout(LABEL_COUNT, 1));
+        rightValuesPanel = new JPanel(new GridLayout(LABEL_COUNT, 1));
+
         SwingUtilities.invokeLater(() -> {
             this.transaction = transaction;
             setLayout(new BorderLayout());
@@ -91,57 +76,51 @@ public class TransactionPanel extends JPanel {
             DeleteButton deleteTransactionButton = new DeleteButton((ActionEvent action) -> {
                 String describeTransaction = transaction.describeTransaction();
                 int input = isPrompt
-                    ? JOptionPane.showConfirmDialog(
-                        null, 
+                        ? JOptionPane.showConfirmDialog(
+                        null,
                         "Delete " + name + " of " + describeTransaction + "?"
-                    )
-                    : 0;
+                )
+                        : 0;
                 if (input == 0) {
                     removeTransactionConsumer.accept(transaction.getId());
                     setVisible(false);
                 }
             });
 
-            ItemComposition itemComp = itemManager.getItemComposition(transaction.getItemId());
             container = new JPanel();
             container.setLayout(new BorderLayout());
             container.setBackground(ColorScheme.DARK_GRAY_COLOR);
-            container.add(
-                new ItemHeader(
-                    transaction.getItemId(),
-                    transaction.getPricePer(),
-                    itemComp.getName(),
-                    itemManager,
-                    false,
-                    deleteTransactionButton
-                ),
-                BorderLayout.NORTH
-            );
 
-            leftInfoTextPanel.setBorder(new EmptyBorder(2, 5, 2, 10));
-            rightValuesPanel.setBorder(new EmptyBorder(2, 5, 2, 10));
+            // Use clientThread.invokeLater to get item composition
+            clientThread.invokeLater(() -> {
+                ItemComposition itemComp = itemManager.getItemComposition(transaction.getItemId());
 
-            constructItemInfo();
-
-            if (transaction.getQuantity() != transaction.getTotalQuantity()) {
-                container.add(new AmountProgressBar(transaction), BorderLayout.SOUTH);
-            } else {
-                JButton extraComponent = renderExtraComponentSupplier.get();
-                if (extraComponent != null && !transaction.isAlched()) {
-                    extraComponent.addActionListener((ActionEvent event) -> {
-                        this.extraComponentPressedConsumer.accept(transaction);
-                        extraComponent.setVisible(false);
-                    });
+                SwingUtilities.invokeLater(() -> {
                     container.add(
-                        extraComponent,
-                        BorderLayout.SOUTH
+                            new ItemHeader(
+                                    transaction.getItemId(),
+                                    transaction.getPricePer(),
+                                    itemComp.getName(),
+                                    itemManager,
+                                    false,
+                                    deleteTransactionButton,
+                                    clientThread
+                            ),
+                            BorderLayout.NORTH
                     );
-                }
-            }
 
-            container.setBorder(UiUtilities.ITEM_INFO_BORDER);
-            this.add(container, BorderLayout.NORTH);
-            this.setBorder(new EmptyBorder(0, 5, 3, 5));
+                    leftInfoTextPanel.setBorder(new EmptyBorder(2, 5, 2, 10));
+                    rightValuesPanel.setBorder(new EmptyBorder(2, 5, 2, 10));
+
+                    constructItemInfo();
+
+                    // We no longer need the extra component logic, so remove it.
+
+                    container.setBorder(UiUtilities.ITEM_INFO_BORDER);
+                    this.add(container, BorderLayout.NORTH);
+                    this.setBorder(new EmptyBorder(0, 5, 3, 5));
+                });
+            });
         });
     }
 
@@ -176,31 +155,33 @@ public class TransactionPanel extends JPanel {
         String quantityString = Numbers.numberWithCommas(transaction.getQuantity());
         String totalQuantityString = Numbers.numberWithCommas(transaction.getTotalQuantity());
 
+        String quantityValueText = String.valueOf(quantityString + "/" + totalQuantityString);
+
         JLabel pricePerLabel = newLeftLabel("Price Per:");
         JLabel pricePerValue = newRightLabel(pricePerString, ColorScheme.GRAND_EXCHANGE_ALCH);
         addLeftLabel(pricePerLabel);
         addRightLabel(pricePerValue);
 
-        String quantityValueText = transaction.isFilled() 
-            ? quantityString
-            : String.valueOf(
-                quantityString +
-                "/" +
-                totalQuantityString
-            );
-        
+        if (!transaction.isBuy()) {
+            String taxPerString = Numbers.numberWithCommas(transaction.getTax());
+            JLabel taxPerLabel = newLeftLabel("Tax Per:");
+            JLabel taxPerValue = newRightLabel(taxPerString, ColorScheme.PROGRESS_ERROR_COLOR);
+            addLeftLabel(taxPerLabel);
+            addRightLabel(taxPerValue);
+        }
+
         JLabel quantityLabel = newLeftLabel("Quantity:");
         JLabel quantityValue = newRightLabel(
-            quantityValueText,
-            ColorScheme.GRAND_EXCHANGE_ALCH
+                quantityValueText,
+                ColorScheme.GRAND_EXCHANGE_ALCH
         );
         addLeftLabel(quantityLabel);
         addRightLabel(quantityValue);
 
         JLabel dateLabel = newLeftLabel("Date:");
         JLabel dateValue = newRightLabel(
-            Timestamps.format(transaction.getCreatedTime()),
-            ColorScheme.GRAND_EXCHANGE_ALCH
+                Timestamps.format(transaction.getCreatedTime()),
+                ColorScheme.GRAND_EXCHANGE_ALCH
         );
         addLeftLabel(dateLabel);
         addRightLabel(dateValue);

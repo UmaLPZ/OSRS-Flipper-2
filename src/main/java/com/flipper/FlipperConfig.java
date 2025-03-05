@@ -24,14 +24,6 @@ public interface FlipperConfig extends Config {
         return true;
     }
 
-    @ConfigItem(
-        keyName = "isPromptDeleteAlch",
-        name = "Delete Alch Prompt",
-        description = "Shows confirmation prompt before deleting alch"
-    )
-    default boolean isPromptDeleteAlch() {
-        return true;
-    }
 
     @ConfigItem(
         keyName = "isPromptDeleteFlip",

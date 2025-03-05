@@ -10,11 +10,14 @@ import lombok.Data;
  */
 @Data
 public class Flip {
+    public static final double TAX_RATE = 0.01; // ADD THIS CONSTANT
+
     public UUID id;
     public UUID userId;
     public UUID buyId;
     public UUID sellId;
     public int itemId;
+    String itemName; // ADD itemName FIELD
     public int quantity;
     public int buyPrice;
     public int sellPrice;
@@ -27,7 +30,8 @@ public class Flip {
         this.buyId = buy.id;
         this.sellId = sell.id;
         this.itemId = sell.getItemId();
-        this.quantity = sell.getQuantity(); 
+        this.itemName = sell.getItemName(); // SET itemName HERE
+        this.quantity = sell.getQuantity();
         this.buyPrice = buy.getPricePer();
         this.sellPrice = sell.getPricePer();
 
@@ -43,16 +47,34 @@ public class Flip {
         return quantity == 1 && buyPrice >= sellPrice;
     }
 
-    public String describeFlip(String itemName) {
-        return String.valueOf(quantity) + " " + itemName + "(s)";
+    public String describeFlip() { // MODIFIED METHOD - No itemName argument
+        return String.valueOf(quantity) + " " + this.itemName + "(s)"; // Use this.itemName
     }
 
     /**
      * We only concern ourselves with the amount sold (ignore extra bought and kept)
-     * 
+     *
      * @return profit of flip
      */
     public int getTotalProfit() {
-        return (sellPrice - buyPrice) * quantity;
+        return (sellPrice - buyPrice - getTax()) * quantity; // MODIFIED - Subtract tax
+    }
+
+    /**
+     * The GE floors tax per item.
+     *
+     * @return tax per item of flip
+     */
+    public int getTax() { // ADDED METHOD
+        return (int) Math.floor((double)this.sellPrice * TAX_RATE);
+    }
+
+    /**
+     * Gets the total tax of the sale
+     *
+     * @return total tax of sale
+     */
+    public int getTotalTax() { // ADDED METHOD
+        return getTax() * quantity;
     }
 }

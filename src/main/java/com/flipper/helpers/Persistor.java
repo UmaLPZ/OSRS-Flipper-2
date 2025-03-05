@@ -1,9 +1,7 @@
 package com.flipper.helpers;
 
-import com.flipper.api.Api;
 import com.flipper.models.Flip;
 import com.flipper.models.Transaction;
-import com.flipper.responses.LoginResponse;
 
 import net.runelite.client.RuneLite;
 import com.google.gson.Gson;
@@ -26,10 +24,8 @@ public class Persistor {
     public static File directory;
     public static final String SELLS_JSON_FILE = "flipper-sells.json";
     public static final String BUYS_JSON_FILE = "flipper-buys.json";
-    public static final String MARGINS_JSON_FILE = "flipper-margins-2.json";
-    // Only used to check to see if file exists to upload to api
     public static final String FLIPS_JSON_FILE = "flipper-flips.json";
-    public static final String LOGIN_RESPONSE_JSON_FILE = "flipper-login-response.json";
+    public static final String IN_PROGRESS_TRANSACTIONS_JSON_FILE = "flipper-inprogress-transactions.json"; // ADDED CONSTANT
 
     public static void setUp(String directoryPath) throws IOException {
         directory = new File(directoryPath);
@@ -44,13 +40,13 @@ public class Persistor {
     }
 
     /**
-     * Creates 3 required json files: sells, buys, flips
+     * Creates required json files
      */
     private static void createRequiredFiles() throws IOException {
         generateFileIfDoesNotExist(SELLS_JSON_FILE);
         generateFileIfDoesNotExist(BUYS_JSON_FILE);
-        generateFileIfDoesNotExist(MARGINS_JSON_FILE);
-        generateFileIfDoesNotExist(LOGIN_RESPONSE_JSON_FILE);
+        generateFileIfDoesNotExist(FLIPS_JSON_FILE);
+        generateFileIfDoesNotExist(IN_PROGRESS_TRANSACTIONS_JSON_FILE); // ADDED LINE - Generate in-progress transactions file
     }
 
     private static void generateFileIfDoesNotExist(String filename) throws IOException {
@@ -69,52 +65,6 @@ public class Persistor {
                 throw new IOException("unable to create parent directory!");
             }
         }
-    }
-
-    public static LoginResponse loadLoginResponse() throws IOException {
-        String jsonString = getFileContent(LOGIN_RESPONSE_JSON_FILE);
-        LoginResponse loadedLoginResponse = gson.fromJson(jsonString, LoginResponse.class);
-
-        if (loadedLoginResponse != null && !loadedLoginResponse.error) {
-            Api.setLoginResponse(loadedLoginResponse);
-        }
-
-        return loadedLoginResponse;
-    }
-
-    public static void saveLoginResponse(LoginResponse loginResponse) throws IOException {
-        if (loginResponse == null) {
-            return;
-        }
-
-        File file = new File(directory, LOGIN_RESPONSE_JSON_FILE);
-        String json = gson.toJson(loginResponse);
-        Files.write(file.toPath(), json.getBytes());
-    }
-
-    public static void deleteLoginResponse() throws IOException {
-        Path loginResponsePath = Paths.get(directory.getAbsolutePath(), LOGIN_RESPONSE_JSON_FILE);
-        if (Files.exists(loginResponsePath)) {
-            Files.delete(loginResponsePath);
-        }
-        Api.loginResponse = null;
-        Api.jwt = null;
-    }
-
-    public static void deleteFlipsJsonFile() throws IOException {
-        Path flipsJsonPath = getFlipsJsonPath();
-        if (Files.exists(flipsJsonPath)) {
-            Files.delete(flipsJsonPath);
-        }
-    }
-
-    public static boolean checkDoesFlipsFileExist() throws IOException {
-        Path flipsJsonPath = getFlipsJsonPath();
-        return Files.exists(flipsJsonPath);
-    }
-
-    public static Path getFlipsJsonPath() {
-        return Paths.get(directory.getAbsolutePath(), FLIPS_JSON_FILE);
     }
 
     public static void saveJson(List<?> list, String filename) throws IOException {
@@ -149,9 +99,9 @@ public class Persistor {
         }
     }
 
-    public static boolean saveMargins(List<Flip> margins) {
+    public static boolean saveFlips(List<Flip> flips) {
         try {
-            saveJson(margins, MARGINS_JSON_FILE);
+            saveJson(flips, FLIPS_JSON_FILE);
             return true;
         } catch (Exception error) {
             Log.info("Failed to save flips " + error.toString());
@@ -159,14 +109,14 @@ public class Persistor {
         }
     }
 
-    public static List<Flip> loadMargins() throws IOException {
-        String jsonString = getFileContent(MARGINS_JSON_FILE);
+    public static List<Flip> loadFlips() throws IOException {
+        String jsonString = getFileContent(FLIPS_JSON_FILE);
         Type type = new TypeToken<List<Flip>>() {}.getType();
-        List<Flip> margins = gson.fromJson(jsonString, type);
-        if (margins == null) {
+        List<Flip> flips = gson.fromJson(jsonString, type);
+        if (flips == null) {
             return new ArrayList<Flip>();
         }
-        return margins;
+        return flips;
     }
 
     public static List<Transaction> loadBuys() throws IOException {
@@ -187,5 +137,25 @@ public class Persistor {
             return new ArrayList<Transaction>();
         }
         return sells;
+    }
+
+    public static boolean saveInProgressTransactions(List<Transaction> inProgressTransactions) { // ADDED METHOD
+        try {
+            saveJson(inProgressTransactions, IN_PROGRESS_TRANSACTIONS_JSON_FILE);
+            return true;
+        } catch (Exception error) {
+            Log.info("Failed to save in progress transactions " + error.toString());
+            return false;
+        }
+    }
+
+    public static List<Transaction> loadInProgressTransactions() throws IOException { // ADDED METHOD
+        String jsonString = getFileContent(IN_PROGRESS_TRANSACTIONS_JSON_FILE);
+        Type type = new TypeToken<List<Transaction>>() {}.getType();
+        List<Transaction> inProgressTransactions = gson.fromJson(jsonString, type);
+        if (inProgressTransactions == null) {
+            return new ArrayList<Transaction>();
+        }
+        return inProgressTransactions;
     }
 }
