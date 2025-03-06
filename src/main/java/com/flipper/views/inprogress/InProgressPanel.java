@@ -22,17 +22,23 @@ public class InProgressPanel extends JPanel {
     private final JLabel itemIcon = new JLabel();
     private final JLabel itemName = new JLabel();
     private final JLabel quantityProgressLabel = new JLabel();
-    private final JLabel totalOfferValueLabel = new JLabel();
-    private final JLabel valueSoFarLabel = new JLabel();
-    private final JLabel offerStateLabel = new JLabel();
     private final JLabel buySellLabel = new JLabel();
 
+    // Left column labels (initial values)
+    private final JLabel initialOfferValueLabel = new JLabel();
+    private final JLabel initialPricePerLabel = new JLabel();
+
+    // Right column labels (current values)
+    private final JLabel currentOfferValueLabel = new JLabel();
+    private final JLabel currentPricePerLabel = new JLabel();
+    private final JLabel currentLabel = new JLabel(); // "Spent" or "Received"
+    private final JLabel currentPriceLabel = new JLabel(); //"Spent Per" or "Received Per"
+
+
     private final ThinProgressBar progressBar = new ThinProgressBar();
+
     @Inject
     private ClientThread clientThread;
-
-    // Keep track of the last quantity sold to detect changes
-    private int lastQuantitySold = -1;
 
     public InProgressPanel(ItemComposition item, BufferedImage itemImage, GrandExchangeOffer offer) {
         setLayout(new BorderLayout());
@@ -42,9 +48,9 @@ public class InProgressPanel extends JPanel {
         // Top Panel (Buy/Sell Label)
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        buySellLabel.setFont(FontManager.getRunescapeBoldFont()); // Make it stand out
+        buySellLabel.setFont(FontManager.getRunescapeBoldFont());
         buySellLabel.setHorizontalAlignment(JLabel.CENTER);
-        topPanel.add(buySellLabel, BorderLayout.CENTER); // Centered at the top
+        topPanel.add(buySellLabel, BorderLayout.CENTER);
 
         // Left Panel (Item Icon)
         JPanel leftPanel = new JPanel();
@@ -55,93 +61,161 @@ public class InProgressPanel extends JPanel {
         itemIcon.setIcon(new ImageIcon(itemImage));
         leftPanel.add(itemIcon);
 
-        // Right Panel (Text Information)
-        JPanel rightPanel = new JPanel(new GridLayout(5, 1)); // 5 rows, 1 column
-        rightPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        rightPanel.setBorder(new EmptyBorder(0, 5, 0, 0)); // Add some padding
+        // --- Center Panel (Two Columns + Item Name and Quantity) ---
+        JPanel centerPanel = new JPanel(new GridBagLayout()); // Use GridBagLayout for main column layout
+        centerPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        centerPanel.setBorder(new EmptyBorder(0, 5, 0, 0));
 
-        itemName.setText(item.getName());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 2, 5); // Add spacing
+
+        // Item Name (centered above the columns)
         itemName.setFont(FontManager.getRunescapeSmallFont());
         itemName.setForeground(Color.WHITE);
-        itemName.setToolTipText(item.getName()); // Add tool tip for long item names
+        itemName.setToolTipText(item.getName());
+        itemName.setHorizontalAlignment(JLabel.CENTER); // Center alignment
+        gbc.gridwidth = 2; // Span both columns
+        centerPanel.add(itemName, gbc);
+        gbc.gridwidth = 1; // Reset for other labels
+        gbc.gridy++;
 
+        // --- Left Column (Initial Values) ---
+        JPanel initialValuePanel = new JPanel(new GridLayout(4, 1)); // 4 rows, 1 column - Label & Value x2
+        initialValuePanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
+
+        // Total Value (Label and Value)
+        JLabel totalValueLabel = new JLabel("Total Value:");
+        totalValueLabel.setFont(FontManager.getRunescapeSmallFont());
+        totalValueLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+        initialOfferValueLabel.setFont(FontManager.getRunescapeSmallFont());
+        initialOfferValueLabel.setForeground(ColorScheme.GRAND_EXCHANGE_ALCH);
+        initialValuePanel.add(totalValueLabel);
+        initialValuePanel.add(initialOfferValueLabel);
+
+        // Price Per (Label and Value)
+        JLabel pricePerLabel = new JLabel("Price Per:");
+        pricePerLabel.setFont(FontManager.getRunescapeSmallFont());
+        pricePerLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+        initialPricePerLabel.setFont(FontManager.getRunescapeSmallFont());
+        initialPricePerLabel.setForeground(ColorScheme.GRAND_EXCHANGE_ALCH);
+        initialValuePanel.add(pricePerLabel);
+        initialValuePanel.add(initialPricePerLabel);
+
+        gbc.gridx = 0; // Column 0
+        gbc.weightx = 0.5; // Equal weight for columns
+        centerPanel.add(initialValuePanel, gbc);
+
+        // --- Right Column (Current Values) ---
+        JPanel currentValuePanel = new JPanel(new GridLayout(4, 1)); // 4 rows, 1 column - Label & Value x2
+        currentValuePanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
+
+        currentLabel.setFont(FontManager.getRunescapeSmallFont());
+        currentLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+        currentOfferValueLabel.setFont(FontManager.getRunescapeSmallFont());
+        currentOfferValueLabel.setForeground(ColorScheme.GRAND_EXCHANGE_ALCH);
+        currentValuePanel.add(currentLabel);
+        currentValuePanel.add(currentOfferValueLabel);
+
+        currentPriceLabel.setFont(FontManager.getRunescapeSmallFont());
+        currentPriceLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+
+        currentPricePerLabel.setFont(FontManager.getRunescapeSmallFont());
+        currentPricePerLabel.setForeground(ColorScheme.GRAND_EXCHANGE_ALCH);
+        currentValuePanel.add(currentPriceLabel);
+        currentValuePanel.add(currentPricePerLabel);
+
+        gbc.gridx = 1; // Column 1
+        gbc.weightx = 0.5; // Equal weight
+        centerPanel.add(currentValuePanel, gbc);
+
+        // --- Quantity Progress (centered below the columns) ---
+        gbc.gridy++;
+        gbc.gridx = 0;
+        gbc.gridwidth = 2; // Span both columns
         quantityProgressLabel.setFont(FontManager.getRunescapeSmallFont());
         quantityProgressLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+        quantityProgressLabel.setHorizontalAlignment(JLabel.CENTER);
+        centerPanel.add(quantityProgressLabel, gbc);
 
-        totalOfferValueLabel.setFont(FontManager.getRunescapeSmallFont());
-        totalOfferValueLabel.setForeground(ColorScheme.GRAND_EXCHANGE_ALCH); // Example color
+        // --- Main Panel Layout (using BorderLayout) ---
+        JPanel mainContentPanel = new JPanel(new BorderLayout()); // Holds everything except topPanel and progressBar
+        mainContentPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-        valueSoFarLabel.setFont(FontManager.getRunescapeSmallFont());
-        valueSoFarLabel.setForeground(ColorScheme.GRAND_EXCHANGE_ALCH); // Example color
+        JPanel combinedItemAndCenterPanel = new JPanel(); // Holds itemNamePanel, leftPanel and centerPanel
+        combinedItemAndCenterPanel.setLayout(new BoxLayout(combinedItemAndCenterPanel, BoxLayout.X_AXIS)); // Arrange horizontally
+        combinedItemAndCenterPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-        offerStateLabel.setFont(FontManager.getRunescapeSmallFont());
-        offerStateLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+        combinedItemAndCenterPanel.add(leftPanel);
+        combinedItemAndCenterPanel.add(centerPanel);
 
-        rightPanel.add(itemName);
-        rightPanel.add(quantityProgressLabel); // Combined progress
-        rightPanel.add(totalOfferValueLabel);
-        rightPanel.add(valueSoFarLabel);
-        rightPanel.add(offerStateLabel);
 
-        // Main Panel Layout
-        add(topPanel, BorderLayout.NORTH); // Buy/Sell label at the top
-        add(leftPanel, BorderLayout.WEST);
-        add(rightPanel, BorderLayout.CENTER);
-        add(progressBar, BorderLayout.SOUTH);
+        mainContentPanel.add(itemName, BorderLayout.NORTH);  // itemName above
+        mainContentPanel.add(combinedItemAndCenterPanel, BorderLayout.CENTER);
+        mainContentPanel.add(quantityProgressLabel, BorderLayout.SOUTH); // quantityProgress below
 
+        add(topPanel, BorderLayout.NORTH); // buySellLabel at the very top
+        add(mainContentPanel, BorderLayout.CENTER); // All the main content
+        add(progressBar, BorderLayout.SOUTH); // progressBar at the bottom
     }
 
     public void updateOffer(ItemComposition item, BufferedImage itemImage, @Nullable GrandExchangeOffer offer) {
         if (offer == null || offer.getState() == EMPTY) {
             return;
-        } else {
-            boolean buying = offer.getState() == BUYING || offer.getState() == BOUGHT || offer.getState() == CANCELLED_BUY;
-            String offerType = buying ? "Buy" : "Sell"; // Determine offer type
-            Color offerTypeColor = buying ? ColorScheme.GRAND_EXCHANGE_ALCH : ColorScheme.PROGRESS_ERROR_COLOR; // Example colors
-
-
-            // Update labels
-            SwingUtilities.invokeLater(() -> {
-                itemIcon.setIcon(new ImageIcon(itemImage));
-                itemName.setText(item.getName());
-                itemName.setToolTipText(item.getName()); // Update tooltip as well
-
-                // Combined progress label: "50/1000"
-                quantityProgressLabel.setText(
-                        QuantityFormatter.quantityToRSDecimalStack(offer.getQuantitySold()) + " / " +
-                                QuantityFormatter.quantityToRSDecimalStack(offer.getTotalQuantity())
-                );
-
-                totalOfferValueLabel.setText("Total Value: " + QuantityFormatter.formatNumber(offer.getPrice() * offer.getTotalQuantity()) + " gp");
-                valueSoFarLabel.setText((buying ? "Spent So Far: " : "Received So Far: ") + QuantityFormatter.formatNumber(offer.getSpent()) + " gp"); // Clearer wording
-                offerStateLabel.setText("State: " + offer.getState());
-
-                buySellLabel.setText(offerType); // Set Buy/Sell label text
-                buySellLabel.setForeground(offerTypeColor);
-
-                progressBar.setForeground(getProgressColor(offer));
-                progressBar.setMaximumValue(offer.getTotalQuantity());
-                progressBar.setValue(offer.getQuantitySold());
-
-                // Update lastQuantitySold for the *next* update
-                lastQuantitySold = offer.getQuantitySold();
-
-                revalidate();
-                repaint();
-            });
         }
-        revalidate();
+
+        boolean buying = offer.getState() == BUYING || offer.getState() == BOUGHT || offer.getState() == CANCELLED_BUY;
+        String offerType = buying ? "Buy" : "Sell";
+        Color offerTypeColor = buying ? ColorScheme.GRAND_EXCHANGE_ALCH : ColorScheme.PROGRESS_ERROR_COLOR;
+
+        SwingUtilities.invokeLater(() -> {
+            itemIcon.setIcon(new ImageIcon(itemImage));
+            itemName.setText(item.getName());
+            itemName.setToolTipText(item.getName());
+
+            // Initial Values
+            int initialTotalPrice = offer.getPrice() * offer.getTotalQuantity();
+            int initialPricePer = offer.getPrice();
+            initialOfferValueLabel.setText(QuantityFormatter.formatNumber(initialTotalPrice) + " gp");
+            initialPricePerLabel.setText(QuantityFormatter.formatNumber(initialPricePer) + " gp");
+
+            // Current Values
+            int currentTotalPrice = offer.getQuantitySold() * offer.getPrice();
+            int currentPricePer = offer.getQuantitySold() > 0 ? offer.getSpent() / offer.getQuantitySold() : 0;
+            currentOfferValueLabel.setText(QuantityFormatter.formatNumber(currentTotalPrice) + " gp");
+            currentPricePerLabel.setText(QuantityFormatter.formatNumber(currentPricePer) + " gp");
+
+            // Set dynamic labels based on buy/sell
+            currentLabel.setText(buying ? "Spent:" : "Received:");
+            currentPriceLabel.setText(buying ? "Spent Per:" : "Received Per:");
+
+            // Combined progress label
+            quantityProgressLabel.setText(
+                    QuantityFormatter.quantityToRSDecimalStack(offer.getQuantitySold()) + " / " +
+                            QuantityFormatter.quantityToRSDecimalStack(offer.getTotalQuantity())
+            );
+
+            buySellLabel.setText(offerType);
+            buySellLabel.setForeground(offerTypeColor);
+
+            progressBar.setForeground(getProgressColor(offer));
+            progressBar.setMaximumValue(offer.getTotalQuantity());
+            progressBar.setValue(offer.getQuantitySold());
+
+            revalidate();
+            repaint();
+        });
     }
 
-    private Color getProgressColor(GrandExchangeOffer offer)
-    {
-        if (offer.getState() == CANCELLED_BUY || offer.getState() == CANCELLED_SELL)
-        {
+    private Color getProgressColor(GrandExchangeOffer offer) {
+        if (offer.getState() == CANCELLED_BUY || offer.getState() == CANCELLED_SELL) {
             return ColorScheme.PROGRESS_ERROR_COLOR;
         }
 
-        if (offer.getQuantitySold() == offer.getTotalQuantity())
-        {
+        if (offer.getQuantitySold() == offer.getTotalQuantity()) {
             return ColorScheme.PROGRESS_COMPLETE_COLOR;
         }
 

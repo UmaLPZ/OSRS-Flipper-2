@@ -105,7 +105,7 @@ public class TabManager extends PluginPanel {
             TransactionPage buyPage,
             TransactionPage sellPage,
             FlipPage flipPage,
-            InProgressPage inProgressPage
+            InProgressPage inProgressPage // Changed parameter type
     ) {
         SwingUtilities.invokeLater(() -> {
             this.removeAll();
@@ -114,10 +114,15 @@ public class TabManager extends PluginPanel {
             JPanel header = new JPanel(new BorderLayout());
             header.setBorder(new EmptyBorder(5, 0, 0, 0));
             MaterialTabGroup tabGroup = new MaterialTabGroup(display);
+            Tab buysTab = new Tab("Buys", tabGroup, buyPage);
+            Tab sellsTab = new Tab("Sells", tabGroup, sellPage);
             Tab inProgressTab = new Tab("In Progress", tabGroup, inProgressPage); // MODIFIED - Changed Tab Label and Page
             tabGroup.setBorder(new EmptyBorder(5, 0, 2, 0));
+            tabGroup.addTab(buysTab);
+            tabGroup.addTab(sellsTab);
             tabGroup.addTab(inProgressTab); // MODIFIED - Added InProgressTab
-            tabGroup.select(inProgressTab); // Select inProgressTab
+            // Initialize with buys tab open.
+            tabGroup.select(buysTab); // Select inProgressTab
             JPanel tabGroupContainer = new JPanel();
             tabGroupContainer.setBackground(ColorScheme.DARKER_GRAY_COLOR.darker());
             tabGroupContainer.add(tabGroup);

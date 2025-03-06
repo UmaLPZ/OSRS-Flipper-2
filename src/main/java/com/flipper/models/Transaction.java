@@ -2,7 +2,6 @@ package com.flipper.models;
 
 import lombok.Data;
 import net.runelite.api.GrandExchangeOffer;
-import net.runelite.api.GrandExchangeOfferState;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -14,8 +13,6 @@ import com.flipper.helpers.GrandExchange;
  */
 @Data
 public class Transaction {
-    public static final double TAX_RATE = 0.01;
-
     public final UUID id;
     private int quantity;
     private int totalQuantity;
@@ -29,6 +26,12 @@ public class Transaction {
     private boolean isAlched;
     private Instant completedTime;
     private Instant createdTime;
+    /**
+     * RuneLite grand exchange subscribing is odd. Interactions are duplicated. This
+     * is only an issue when cancelling buy/sells as the Transaction is being marked
+     * as completed resulting in the second GrandExchangeEvent duplicating the
+     * Transaction See FlipperPlugin::onGrandExchangeOfferChanged
+     */
     private boolean hasCancelledOnce = false;
 
     public Transaction(
@@ -58,14 +61,7 @@ public class Transaction {
     public Transaction updateTransaction(GrandExchangeOffer offer) {
         this.quantity = offer.getQuantitySold();
         this.totalQuantity = offer.getTotalQuantity();
-        int quantitySold = offer.getQuantitySold();
-
-        if (quantitySold > 0) {
-            this.pricePer = offer.getSpent() / quantitySold;
-        } else {
-            this.pricePer = 0;
-        }
-
+        this.pricePer = offer.getSpent() / offer.getQuantitySold();
         boolean isCancelState = GrandExchange.checkIsCancelState(offer.getState());
 
         if (!isCancelState || (this.hasCancelledOnce && isCancelState)) {
@@ -80,9 +76,9 @@ public class Transaction {
             completedTime = Instant.now();
             this.totalQuantity = offer.getQuantitySold();
         }
-
         return this;
     }
+
     public String describeTransaction() {
         return String.valueOf(this.quantity) + " " + this.itemName + "(s)";
     }
@@ -97,13 +93,5 @@ public class Transaction {
 
     public boolean isFilled() {
         return quantity == totalQuantity;
-    }
-
-    public int getTax() {
-        return (int) Math.floor((double)this.pricePer * TAX_RATE);
-    }
-
-    public int getTotalTax() {
-        return getTax() * quantity;
     }
 }

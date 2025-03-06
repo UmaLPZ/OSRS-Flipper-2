@@ -18,12 +18,12 @@
 //import com.google.common.base.Supplier;
 //import com.flipper.views.transactions.TransactionPage;
 //import com.flipper.views.components.Pagination;
-//import com.flipper.helpers.Log;
+//import net.runelite.client.callback.ClientThread; // Import ClientThread
 //
 //import lombok.Getter;
 //import lombok.Setter;
+//import net.runelite.api.GrandExchangeOffer;
 //import net.runelite.client.game.ItemManager;
-//import net.runelite.client.callback.ClientThread;
 //
 //public abstract class TransactionController { // Remains abstract
 //    @Getter
@@ -34,37 +34,34 @@
 //    protected ItemManager itemManager;
 //    protected Pagination pagination;
 //    protected Consumer<UUID> removeTransactionConsumer;
-//    protected JButton extraComponent;
+//    // protected JButton extraComponent; // Removed
 //    protected boolean isPrompt;
 //    protected String searchText;
 //    protected Consumer<String> onSearchTextChangedCallback;
-//    protected ClientThread cThread; // Keep ClientThread here
+//    protected ClientThread clientThread; // Keep ClientThread here
 //
 //    // Constructor (no more controller dependencies)
-//    public TransactionController(String name, ItemManager itemManager, boolean isPrompt, ClientThread cThread) throws IOException {
+//    public TransactionController(ItemManager itemManager, boolean isPrompt, ClientThread clientThread) throws IOException {
 //        this.isPrompt = isPrompt;
 //        this.itemManager = itemManager;
-//        this.cThread = cThread; // Store ClientThread
+//        this.clientThread = clientThread; // Store ClientThread
 //        this.removeTransactionConsumer = id -> this.removeTransaction(id);
 //
 //        // The rest of the constructor remains largely the same,
 //        // but we're *not* injecting other controllers.
-//        Supplier<JButton> renderExtraComponentSupplier = () -> {
-//            return renderExtraComponent();
-//        };
-//        Consumer<Transaction> extraComponentPressedConsumer = (transaction) -> {
-//            this.extraComponentPressed(transaction);
-//        };
+//        // Supplier<JButton> renderExtraComponentSupplier = () -> { // Removed
+//        //     return renderExtraComponent();
+//        // };
+//        // Consumer<Transaction> extraComponentPressedConsumer = (transaction) -> { // Removed
+//        //     this.extraComponentPressed(transaction);
+//        // };
 //        Consumer<Object> renderItemCallback = (Object sell) -> {
 //            TransactionPanel transactionPanel = new TransactionPanel(
-//                    name,
 //                    (Transaction) sell,
 //                    itemManager,
 //                    this.removeTransactionConsumer,
 //                    isPrompt,
-//                    renderExtraComponentSupplier,
-//                    extraComponentPressedConsumer,
-//                    cThread // Pass cThread to TransactionPanel
+//                    clientThread // Pass cThread to TransactionPanel
 //            );
 //            this.transactionPage.addTransactionPanel(transactionPanel);
 //        };
@@ -102,11 +99,11 @@
 //        }
 //    }
 //
-//    public void extraComponentPressed(Transaction transaction) {};
+//    // public void extraComponentPressed(Transaction transaction) {}; // Removed
 //
-//    public JButton renderExtraComponent() {
-//        return null;
-//    }
+//    // public JButton renderExtraComponent() { // Removed
+//    //     return null;
+//    // }
 //
 //    public abstract void loadTransactions() throws IOException; // Remains abstract
 //
@@ -158,5 +155,32 @@
 //            this.transactionPage.revalidate();
 //        });
 //    }
-//    // Remove updateTransaction (it's no longer needed in the base class)
+//
+//    public Transaction upsertTransaction(GrandExchangeOffer offer, int slot) {
+//        // Check to see if there is an incomplete transaction we can fill
+//        ListIterator<Transaction> transactionsIter = transactions.listIterator(transactions.size());
+//        while (transactionsIter.hasPrevious()) {
+//            Transaction transaction = transactionsIter.previous();
+//            // Incomplete sell transaction found, update it
+//
+//            if (
+//                    transaction.getSlot() == slot &&
+//                            transaction.getItemId() == offer.getItemId() &&
+//                            transaction.getTotalQuantity() == offer.getTotalQuantity()
+//            ) {
+//                cThread.invoke(()->{
+//                    Transaction updatedTransaction = transaction.updateTransaction(offer); // MODIFIED LINE - Call on client thread
+//                    transactionsIter.set(updatedTransaction);
+//                    SwingUtilities.invokeLater(() -> this.buildView()); // Wrap buildView in invokeLater
+//                });
+//                return updatedTransaction;
+//            }
+//        }
+//
+//        // It's a new transaction, create one
+//        Transaction newTransaction = Transaction.createTransactionFromOffer(offer, itemManager, slot);
+//        this.addTransaction(newTransaction);
+//        SwingUtilities.invokeLater(() -> this.buildView());
+//        return newTransaction;
+//    }
 //}
