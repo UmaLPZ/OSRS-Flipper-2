@@ -1,6 +1,5 @@
 package com.flipper.helpers;
 
-import com.flipper.models.Flip;
 import com.flipper.models.Transaction;
 
 import net.runelite.client.RuneLite;
@@ -24,8 +23,6 @@ public class Persistor {
     public static File directory;
     public static final String SELLS_JSON_FILE = "flipper-sells.json";
     public static final String BUYS_JSON_FILE = "flipper-buys.json";
-    public static final String FLIPS_JSON_FILE = "flipper-flips.json";
-    public static final String IN_PROGRESS_TRANSACTIONS_JSON_FILE = "flipper-inprogress-transactions.json"; // ADDED CONSTANT
 
     public static void setUp(String directoryPath) throws IOException {
         directory = new File(directoryPath);
@@ -40,13 +37,11 @@ public class Persistor {
     }
 
     /**
-     * Creates required json files
+     * Creates the required json files
      */
     private static void createRequiredFiles() throws IOException {
         generateFileIfDoesNotExist(SELLS_JSON_FILE);
         generateFileIfDoesNotExist(BUYS_JSON_FILE);
-        generateFileIfDoesNotExist(FLIPS_JSON_FILE);
-        generateFileIfDoesNotExist(IN_PROGRESS_TRANSACTIONS_JSON_FILE); // ADDED LINE - Generate in-progress transactions file
     }
 
     private static void generateFileIfDoesNotExist(String filename) throws IOException {
@@ -99,26 +94,6 @@ public class Persistor {
         }
     }
 
-    public static boolean saveFlips(List<Flip> flips) {
-        try {
-            saveJson(flips, FLIPS_JSON_FILE);
-            return true;
-        } catch (Exception error) {
-            Log.info("Failed to save flips " + error.toString());
-            return false;
-        }
-    }
-
-    public static List<Flip> loadFlips() throws IOException {
-        String jsonString = getFileContent(FLIPS_JSON_FILE);
-        Type type = new TypeToken<List<Flip>>() {}.getType();
-        List<Flip> flips = gson.fromJson(jsonString, type);
-        if (flips == null) {
-            return new ArrayList<Flip>();
-        }
-        return flips;
-    }
-
     public static List<Transaction> loadBuys() throws IOException {
         String jsonString = getFileContent(BUYS_JSON_FILE);
         Type type = new TypeToken<List<Transaction>>() {}.getType();
@@ -137,25 +112,5 @@ public class Persistor {
             return new ArrayList<Transaction>();
         }
         return sells;
-    }
-
-    public static boolean saveInProgressTransactions(List<Transaction> inProgressTransactions) { // ADDED METHOD
-        try {
-            saveJson(inProgressTransactions, IN_PROGRESS_TRANSACTIONS_JSON_FILE);
-            return true;
-        } catch (Exception error) {
-            Log.info("Failed to save in progress transactions " + error.toString());
-            return false;
-        }
-    }
-
-    public static List<Transaction> loadInProgressTransactions() throws IOException { // ADDED METHOD
-        String jsonString = getFileContent(IN_PROGRESS_TRANSACTIONS_JSON_FILE);
-        Type type = new TypeToken<List<Transaction>>() {}.getType();
-        List<Transaction> inProgressTransactions = gson.fromJson(jsonString, type);
-        if (inProgressTransactions == null) {
-            return new ArrayList<Transaction>();
-        }
-        return inProgressTransactions;
     }
 }

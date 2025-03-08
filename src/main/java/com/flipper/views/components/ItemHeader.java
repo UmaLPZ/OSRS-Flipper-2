@@ -18,7 +18,6 @@ import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.util.AsyncBufferedImage;
-import net.runelite.client.callback.ClientThread; // Import
 
 import java.awt.event.*;
 
@@ -33,22 +32,18 @@ public class ItemHeader extends JPanel {
     private JPanel topRightContainer;
     private JLabel costPerLabel;
 
-    private final ClientThread clientThread; // Add ClientThread field
-
     public ItemHeader(
             int itemId,
             int pricePer,
             String itemName,
             ItemManager itemManager,
             boolean isAddCostPer,
-            JButton hoverButton,
-            ClientThread clientThread // Add ClientThread parameter
+            JButton hoverButton
     ) {
         this.itemId = itemId;
         this.pricePer = pricePer;
         this.itemName = itemName;
         this.itemManager = itemManager;
-        this.clientThread = clientThread; // Initialize ClientThread
         this.setLayout(new BorderLayout());
         topRightContainer = new JPanel();
         topRightContainer.setBackground(ColorScheme.DARKER_GRAY_COLOR.darker());
@@ -107,19 +102,16 @@ public class ItemHeader extends JPanel {
     }
 
     private JPanel constructItemIcon() {
-        // Use clientThread.invokeLater to get item image
+        AsyncBufferedImage itemImage = itemManager.getImage(this.itemId);
+        JLabel itemIcon = new JLabel();
+        itemIcon.setAlignmentX(Component.LEFT_ALIGNMENT);
+        itemIcon.setPreferredSize(UiUtilities.ICON_SIZE);
+        if (itemImage != null) {
+            itemImage.addTo(itemIcon);
+        }
         JPanel itemIconPanel = new JPanel(new BorderLayout());
-        clientThread.invokeLater(() -> {
-            AsyncBufferedImage itemImage = itemManager.getImage(this.itemId);
-            JLabel itemIcon = new JLabel();
-            itemIcon.setAlignmentX(Component.LEFT_ALIGNMENT);
-            itemIcon.setPreferredSize(UiUtilities.ICON_SIZE);
-            if (itemImage != null) {
-                itemImage.addTo(itemIcon);
-            }
-            itemIconPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR.darker());
-            itemIconPanel.add(itemIcon, BorderLayout.WEST);
-        });
+        itemIconPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR.darker());
+        itemIconPanel.add(itemIcon, BorderLayout.WEST);
         return itemIconPanel;
     }
 

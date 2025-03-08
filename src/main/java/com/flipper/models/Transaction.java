@@ -13,6 +13,8 @@ import com.flipper.helpers.GrandExchange;
  */
 @Data
 public class Transaction {
+    public static final double TAX_RATE = 0.01;
+
     public final UUID id;
     private int quantity;
     private int totalQuantity;
@@ -58,10 +60,16 @@ public class Transaction {
         this.hasCancelledOnce = false;
     }
 
-    public Transaction updateTransaction(GrandExchangeOffer offer) {
+    public Transaction updateTransaction(GrandExchangeOffer offer, String name) {
         this.quantity = offer.getQuantitySold();
         this.totalQuantity = offer.getTotalQuantity();
-        this.pricePer = offer.getSpent() / offer.getQuantitySold();
+        // Check for division by zero!
+        if (offer.getQuantitySold() > 0) {
+            this.pricePer = offer.getSpent() / offer.getQuantitySold();
+        } else {
+            this.pricePer = 0; // Or some other default value
+        }
+        this.itemName = name;
         boolean isCancelState = GrandExchange.checkIsCancelState(offer.getState());
 
         if (!isCancelState || (this.hasCancelledOnce && isCancelState)) {
@@ -74,7 +82,7 @@ public class Transaction {
 
         if (this.isComplete) {
             completedTime = Instant.now();
-            this.totalQuantity = offer.getQuantitySold();
+            this.totalQuantity = offer.getQuantitySold(); //total quantity should be set to quantity bought/sold at completion
         }
         return this;
     }
@@ -93,5 +101,23 @@ public class Transaction {
 
     public boolean isFilled() {
         return quantity == totalQuantity;
+    }
+
+    /**
+     * The GE floors tax per item.
+     *
+     * @return tax per item of flip
+     */
+    public int getTax() {
+        return (int) Math.floor((double)this.pricePer * TAX_RATE);
+    }
+
+    /**
+     * Gets the total tax of the sale
+     *
+     * @return total tax of sale
+     */
+    public int getTotalTax() {
+        return getTax() * quantity;
     }
 }

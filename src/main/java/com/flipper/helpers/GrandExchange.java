@@ -41,23 +41,23 @@ public class GrandExchange {
 
         ItemComposition itemComposition = itemManager.getItemComposition(offer.getItemId());
         return new Transaction(
-            offer.getQuantitySold(),
-            offer.getTotalQuantity(),
-            offer.getItemId(),
-            offer.getPrice(),
-            slot,
-            itemComposition.getName(),
-            isBuy,
-            isComplete
+                offer.getQuantitySold(),
+                offer.getTotalQuantity(),
+                offer.getItemId(),
+                offer.getPrice(),
+                slot,
+                itemComposition.getName(),
+                isBuy,
+                isComplete
         );
     }
 
     public static boolean checkIsOfferPartOfTransaction(Transaction transaction, GrandExchangeOffer offer, int slot) {
-        return 
-            (!transaction.isComplete() || (transaction.isComplete() && GrandExchange.checkIsComplete(offer.getState()))) &&
-            transaction.getSlot() == slot &&
-            transaction.getItemId() == offer.getItemId() &&
-            transaction.getTotalQuantity() == offer.getTotalQuantity();
+        return
+                (!transaction.isComplete() || (transaction.isComplete() && GrandExchange.checkIsComplete(offer.getState()))) &&
+                        transaction.getSlot() == slot &&
+                        transaction.getItemId() == offer.getItemId() &&
+                        transaction.getTotalQuantity() == offer.getTotalQuantity();
     }
 
     public static boolean checkIsSellAFlipOfBuy(Transaction sell, Transaction buy) {

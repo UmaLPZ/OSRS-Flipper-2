@@ -1,3 +1,4 @@
+//// FlipsController.java
 //package com.flipper.controllers;
 //
 //import java.io.IOException;
@@ -27,8 +28,8 @@
 //import java.awt.BorderLayout;
 //
 //import net.runelite.api.ItemComposition;
-//import net.runelite.client.game.ItemManager;
 //import net.runelite.client.callback.ClientThread;
+//import net.runelite.client.game.ItemManager;
 //
 //public class FlipsController {
 //    @Getter
@@ -67,15 +68,14 @@
 //                    (Flip) flip,
 //                    itemManager,
 //                    this.removeFlipConsumer,
-//                    config.isPromptDeleteBuy(),
-//                    cThread // Pass cThread here
+//                    config.isPromptDeleteBuy()
 //            );
 //            this.flipPage.addFlipPanel(flipPanel);
 //        };
 //        Runnable buildViewCallback = () -> this.buildView();
 //
 //        this.pagination = new Pagination(renderItemCallback, UiUtilities.ITEMS_PER_PAGE, buildViewCallback);
-//        this.loadFlips();
+//        this.loadFlips(); // Load flips from local storage
 //    }
 //
 //    public void onSearchTextChanged(String searchText) {
@@ -86,10 +86,9 @@
 //
 //    public void addFlip(Flip flip) {
 //        if (this.isTrackingFlips) {
-//            this.flips.add(0, flip); // Add to the beginning of the list for recent flips first
-//            this.saveFlips(); // Call saveFlips() to persist the updated list
-//            this.buildView();
-//            this.getFlipNamesAndBuild();
+//            this.flips.add(0, flip);
+//            this.totalProfit = calculateTotalProfit(flips); // Recalculate total profit
+//            Persistor.saveFlips(this.flips); // Save to local storage
 //        }
 //    }
 //
@@ -99,9 +98,10 @@
 //            Flip flip = flipsIter.next();
 //            if (flip.getId().equals(flipId)) {
 //                flipsIter.remove();
-//                this.saveFlips(); // Call saveFlips() to persist the updated list
+//                this.totalProfit = calculateTotalProfit(flips); // Recalculate
+//                Persistor.saveFlips(this.flips); // Save to local storage
 //                this.buildView();
-//                return;
+//                return; // Exit after removing
 //            }
 //        }
 //    }
@@ -111,26 +111,18 @@
 //    }
 //
 //    public void loadFlips() {
+//        // Load flips from local storage
 //        try {
-//            this.flips = Persistor.loadFlips(); // Load from local storage
-//            this.filteredFlips = this.flips;
+//            this.flips = Persistor.loadFlips();
+//            this.totalProfit = calculateTotalProfit(flips);
+//            this.filteredFlips = this.flips;// Initialize filtered list only once
+//            getFlipNamesAndBuild();
 //        } catch (IOException e) {
-//            Log.info("Failed to load flips from persistence: " + e.getMessage());
-//            this.flips = new ArrayList<>(); // Initialize as empty list if loading fails
-//            this.filteredFlips = this.flips;
-//        }
-//        this.buildView();
-//        this.getFlipNamesAndBuild();
-//    }
-//
-//    private void saveFlips() {
-//        try {
-//            Persistor.saveFlips(this.flips); // Save flips locally
-//        } catch (Exception e) {
-//            Log.info("Failed to save flips to persistence: " + e.getMessage());
+//            Log.info("Failed to load flips from file");
+//            this.flips = new ArrayList<>(); // Initialize as empty if load fails
+//            this.filteredFlips = new ArrayList<>();
 //        }
 //    }
-//
 //    public void getFlipNamesAndBuild(){
 //        cThread.invoke(() -> {
 //            for (Flip flip : flips) {
@@ -142,9 +134,31 @@
 //        });
 //    }
 //
+//    private String calculateTotalProfit(List<Flip> flips) {
+//        int totalProfit = 0;
+//        for (Flip flip : flips) {
+//            totalProfit += flip.getTotalProfit();
+//        }
+//        return String.valueOf(totalProfit);
+//    }
+//
+//    private void updateFlip(Transaction sell, Transaction buy, Flip flip) {
+//        flip.sellPrice = sell.getPricePer();
+//        flip.buyPrice = buy.getPricePer();
+//        flip.quantity = sell.getQuantity();
+//        flip.itemId = sell.getItemId();
+//        flip.setItemName(sell.getItemName());
+//        this.totalProfit = calculateTotalProfit(flips); // Recalculate total
+//        Persistor.saveFlips(this.flips); // Save to local storage
+//        this.buildView();
+//    }
+//
 //    private boolean isRender(Flip flip) {
-//        ItemComposition itemComp = this.itemManager.getItemComposition(flip.getItemId());
-//        String itemName = itemComp.getName();
+//        cThread.invoke(() -> {
+//            ItemComposition itemComp = this.itemManager.getItemComposition(flip.getItemId());
+//            flip.setItemName(itemComp.getName());
+//        });
+//        String itemName = flip.getItemName();
 //
 //        if (
 //                this.searchText != null &&
@@ -178,6 +192,8 @@
 //                    while (buysIterator.hasPrevious()) {
 //                        Transaction buy = buysIterator.previous();
 //                        if (buy.id.equals(flip.getBuyId())) {
+//                            updateFlip(sell, buy, flip);
+//                            flipsIterator.set(flip);
 //                            return flip;
 //                        }
 //                    }
@@ -234,5 +250,9 @@
 //            this.flipPage.setTotalProfit(totalProfit);
 //            this.flipPage.revalidate();
 //        });
+//    }
+//
+//    public void saveTransactions() {
+//        Persistor.saveFlips(this.flips);
 //    }
 //}

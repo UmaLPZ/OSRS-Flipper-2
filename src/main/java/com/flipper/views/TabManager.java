@@ -16,8 +16,7 @@ import javax.swing.border.EmptyBorder;
 
 import com.flipper.helpers.UiUtilities;
 import com.flipper.views.components.Tab;
-import com.flipper.views.flips.FlipPage;
-import com.flipper.views.inprogress.InProgressPage; // MODIFIED IMPORT - Changed from MarginPage
+import com.flipper.views.inprogress.InProgressPage;
 import com.flipper.views.transactions.TransactionPage;
 
 import net.runelite.client.ui.ColorScheme;
@@ -104,8 +103,7 @@ public class TabManager extends PluginPanel {
     public void renderLoggedInView(
             TransactionPage buyPage,
             TransactionPage sellPage,
-            FlipPage flipPage,
-            InProgressPage inProgressPage // Changed parameter type
+            InProgressPage inProgressPage
     ) {
         SwingUtilities.invokeLater(() -> {
             this.removeAll();
@@ -116,13 +114,13 @@ public class TabManager extends PluginPanel {
             MaterialTabGroup tabGroup = new MaterialTabGroup(display);
             Tab buysTab = new Tab("Buys", tabGroup, buyPage);
             Tab sellsTab = new Tab("Sells", tabGroup, sellPage);
-            Tab inProgressTab = new Tab("In Progress", tabGroup, inProgressPage); // MODIFIED - Changed Tab Label and Page
+            Tab inProgressTab = new Tab("In Progress", tabGroup, inProgressPage); // Added InProgressTab
             tabGroup.setBorder(new EmptyBorder(5, 0, 2, 0));
             tabGroup.addTab(buysTab);
             tabGroup.addTab(sellsTab);
-            tabGroup.addTab(inProgressTab); // MODIFIED - Added InProgressTab
+            tabGroup.addTab(inProgressTab); // Add InProgressTab
             // Initialize with buys tab open.
-            tabGroup.select(buysTab); // Select inProgressTab
+            tabGroup.select(buysTab);
             JPanel tabGroupContainer = new JPanel();
             tabGroupContainer.setBackground(ColorScheme.DARKER_GRAY_COLOR.darker());
             tabGroupContainer.add(tabGroup);
