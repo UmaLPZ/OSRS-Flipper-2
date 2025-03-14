@@ -2,11 +2,13 @@
 package com.flipper;
 
 import com.flipper.controllers.BuysController;
+import com.flipper.controllers.FlipsController;
 import com.flipper.controllers.SellsController;
 import com.flipper.helpers.GrandExchange;
 import com.flipper.helpers.Log;
 import com.flipper.helpers.Persistor;
 import com.flipper.helpers.UiUtilities;
+import com.flipper.models.Flip;
 import com.flipper.models.Transaction;
 import com.flipper.views.TabManager;
 import com.flipper.views.inprogress.InProgressPage;
@@ -15,6 +17,7 @@ import com.google.inject.Provides;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import javax.inject.Inject;
@@ -56,6 +59,7 @@ public class FlipperPlugin extends Plugin {
     // Controllers
     private BuysController buysController;
     private SellsController sellsController;
+    private FlipsController flipsController;
 
     // Views
     private NavigationButton navButton;
@@ -71,10 +75,11 @@ public class FlipperPlugin extends Plugin {
             this.setUpNavigationButton();
             this.buysController = new BuysController(itemManager, config, cThread);
             this.sellsController = new SellsController(itemManager, config, cThread);
+            this.flipsController = new FlipsController(itemManager, config, cThread);
             this.changeToLoggedInView();
 
         } catch (Exception e) {
-            Log.info("Flipper failed to start: " + e.getMessage()); // Include exception details
+            Log.info("Flipper failed to start: " + e.getMessage());
         }
     }
 
@@ -98,6 +103,7 @@ public class FlipperPlugin extends Plugin {
             this.tabManager.renderLoggedInView(
                     buysController.getPage(),
                     sellsController.getPage(),
+                    flipsController.getPage(),
                     inProgressPage
             );
         });
@@ -107,6 +113,7 @@ public class FlipperPlugin extends Plugin {
         try {
             buysController.saveTransactions();
             sellsController.saveTransactions();
+            flipsController.saveTransactions();
         } catch (Exception error) {
             Log.info("Failed to save Flipper files");
         }
@@ -130,31 +137,40 @@ public class FlipperPlugin extends Plugin {
         GrandExchangeOfferState offerState = offer.getState();
 
         if (offerState == GrandExchangeOfferState.EMPTY && client.getGameState() != GameState.LOGGED_IN) {
-            return; // Only process offers if logged in
+            return;
         }
 
         if (GrandExchange.checkIsBuy(offerState)) {
-            // Only add buy transactions if they are complete or cancelled with items bought
+            // Handle buy offers
             if (offerState == GrandExchangeOfferState.BOUGHT ||
                     (offerState == GrandExchangeOfferState.CANCELLED_BUY && offer.getQuantitySold() > 0)) {
-                buysController.upsertTransaction(offer, slot);
+                Transaction buy = buysController.upsertTransaction(offer, slot);
+                if (buy != null) {
+                    buysController.saveTransactions();
+                    List<Transaction> sells = sellsController.getTransactions();
+                    flipsController.upsertFlip(buy, sells);
+                }
             }
-        } else if (!GrandExchange.checkIsBuy(offerState)) {
-            // Only add sell transactions if they are complete or cancelled with items sold.
+        } else {
+            // Handle sell offers
             if (offerState == GrandExchangeOfferState.SOLD ||
                     (offerState == GrandExchangeOfferState.CANCELLED_SELL && offer.getQuantitySold() > 0)) {
-                sellsController.upsertTransaction(offer, slot);
+                Transaction sell = sellsController.upsertTransaction(offer, slot); // Use upsertTransaction for sells
+                if (sell != null) {
+                    sellsController.saveTransactions();
+                    List<Transaction> buys = buysController.getTransactions();
+                    flipsController.upsertFlip(sell, buys);
+                }
             }
         }
 
-        // Always update the InProgressPage, even for incomplete offers
+        // Always update the InProgressPage
         updatePanel(slot, offer);
     }
 
     private void updatePanel(int slot, GrandExchangeOffer offer) {
         cThread.invoke(() -> {
             ItemComposition offerItem = itemManager.getItemComposition(offer.getItemId());
-            // ALWAYS get the unstacked image (quantity = 1, shouldStack = false)
             BufferedImage itemImage = itemManager.getImage(offer.getItemId(), 1, false);
             SwingUtilities.invokeLater(() -> inProgressPage.updateOffer(offerItem, itemImage, offer, slot));
         });

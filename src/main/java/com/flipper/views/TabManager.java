@@ -18,6 +18,7 @@ import com.flipper.helpers.UiUtilities;
 import com.flipper.views.components.Tab;
 import com.flipper.views.inprogress.InProgressPage;
 import com.flipper.views.transactions.TransactionPage;
+import com.flipper.views.flips.FlipPage;
 
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
@@ -103,6 +104,7 @@ public class TabManager extends PluginPanel {
     public void renderLoggedInView(
             TransactionPage buyPage,
             TransactionPage sellPage,
+            FlipPage flipPage,
             InProgressPage inProgressPage
     ) {
         SwingUtilities.invokeLater(() -> {
@@ -114,10 +116,12 @@ public class TabManager extends PluginPanel {
             MaterialTabGroup tabGroup = new MaterialTabGroup(display);
             Tab buysTab = new Tab("Buys", tabGroup, buyPage);
             Tab sellsTab = new Tab("Sells", tabGroup, sellPage);
+            Tab flipsTab = new Tab("Flips", tabGroup, flipPage);
             Tab inProgressTab = new Tab("In Progress", tabGroup, inProgressPage); // Added InProgressTab
             tabGroup.setBorder(new EmptyBorder(5, 0, 2, 0));
             tabGroup.addTab(buysTab);
             tabGroup.addTab(sellsTab);
+            tabGroup.addTab(flipsTab);
             tabGroup.addTab(inProgressTab); // Add InProgressTab
             // Initialize with buys tab open.
             tabGroup.select(buysTab);

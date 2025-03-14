@@ -1,3 +1,4 @@
+// TransactionController.java
 package com.flipper.controllers;
 
 import java.io.IOException;
@@ -36,16 +37,16 @@ public class TransactionController {
     protected ItemManager itemManager;
     protected Pagination pagination;
     protected Consumer<UUID> removeTransactionConsumer;
-    protected JButton extraComponent; // Keep this for now, even though it's not used
+    protected JButton extraComponent;
     protected boolean isPrompt;
     protected String searchText;
     protected Consumer<String> onSearchTextChangedCallback;
-    protected ClientThread clientThread; // Add ClientThread
+    protected ClientThread clientThread;
 
     public TransactionController(String name, ItemManager itemManager, boolean isPrompt, ClientThread clientThread) throws IOException {
         this.isPrompt = isPrompt;
         this.itemManager = itemManager;
-        this.clientThread = clientThread; // Initialize ClientThread
+        this.clientThread = clientThread;
         this.removeTransactionConsumer = id -> this.removeTransaction(id);
         // extraComponent will be removed later during code cleanup
         Supplier<JButton> renderExtraComponentSupplier = () -> {
@@ -87,33 +88,25 @@ public class TransactionController {
     }
 
     public Transaction upsertTransaction(GrandExchangeOffer offer, int slot) {
-        // Use AtomicReference to hold the result
-        final Transaction[] result = new Transaction[1]; // Use an array
-
-        clientThread.invoke(() -> {
-            // Check to see if there is an incomplete transaction we can fill
-            ListIterator<Transaction> transactionsIter = transactions.listIterator(transactions.size());
-            while (transactionsIter.hasPrevious()) {
-                Transaction transaction = transactionsIter.previous();
-                // Incomplete sell transaction found, update it
-                if (GrandExchange.checkIsOfferPartOfTransaction(transaction, offer, slot)) {
-                    ItemComposition itemComposition = itemManager.getItemComposition(offer.getItemId());
-                    Transaction updatedTransaction = transaction.updateTransaction(offer, itemComposition.getName());
-                    transactionsIter.set(updatedTransaction);
-                    result[0] = updatedTransaction; // Set the result
-                    this.buildView();
-                    return; // Exit the lambda
-                }
+        // Check to see if there is an incomplete transaction we can fill
+        ListIterator<Transaction> transactionsIter = transactions.listIterator(transactions.size());
+        while (transactionsIter.hasPrevious()) {
+            Transaction transaction = transactionsIter.previous();
+            // Incomplete sell transaction found, update it
+            if (GrandExchange.checkIsOfferPartOfTransaction(transaction, offer, slot)) {
+                Transaction updatedTransaction = transaction.updateTransaction(offer);
+                transactionsIter.set(updatedTransaction);
+                this.buildView();
+                return updatedTransaction;
             }
+        }
 
-            // It's a new transaction, create one
-            Transaction newTransaction = GrandExchange.createTransactionFromOffer(offer, itemManager, slot);
-            this.addTransaction(newTransaction);
-            result[0] = newTransaction; // Set the result
-        });
-
-        return result[0]; // Return the value from the AtomicReference
+        // It's a new transaction, create one
+        Transaction newTransaction = GrandExchange.createTransactionFromOffer(offer, itemManager, slot);
+        this.addTransaction(newTransaction);
+        return newTransaction;
     }
+
 
     public void removeTransaction(UUID id) {
         ListIterator<Transaction> transactionIter = this.transactions.listIterator(this.transactions.size());

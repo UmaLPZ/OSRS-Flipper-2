@@ -183,7 +183,7 @@ public class InProgressPanel extends JPanel {
             initialPricePerLabel.setText(QuantityFormatter.formatNumber(initialPricePer) + " gp");
 
             // Current Values
-            int currentTotalPrice = offer.getQuantitySold() * offer.getPrice();
+            int currentTotalPrice = offer.getSpent();
             int currentPricePer = offer.getQuantitySold() > 0 ? offer.getSpent() / offer.getQuantitySold() : 0;
             currentOfferValueLabel.setText(QuantityFormatter.formatNumber(currentTotalPrice) + " gp");
             currentPricePerLabel.setText(QuantityFormatter.formatNumber(currentPricePer) + " gp");

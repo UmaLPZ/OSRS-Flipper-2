@@ -1,3 +1,4 @@
+// GrandExchange.java
 package com.flipper.helpers;
 
 import com.flipper.models.Transaction;
@@ -44,7 +45,8 @@ public class GrandExchange {
                 offer.getQuantitySold(),
                 offer.getTotalQuantity(),
                 offer.getItemId(),
-                offer.getPrice(),
+                offer.getSpent()/ (offer.getQuantitySold() > 0 ? offer.getQuantitySold() : 1), // Calculate finPricePer here
+                offer.getPrice(), // initPricePer: Use offer.getPrice()
                 slot,
                 itemComposition.getName(),
                 isBuy,

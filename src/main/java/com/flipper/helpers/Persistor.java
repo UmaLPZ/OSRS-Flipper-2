@@ -1,5 +1,6 @@
 package com.flipper.helpers;
 
+import com.flipper.models.Flip; // Import Flip
 import com.flipper.models.Transaction;
 
 import net.runelite.client.RuneLite;
@@ -23,6 +24,7 @@ public class Persistor {
     public static File directory;
     public static final String SELLS_JSON_FILE = "flipper-sells.json";
     public static final String BUYS_JSON_FILE = "flipper-buys.json";
+    public static final String FLIPS_JSON_FILE = "flipper-flips.json"; // Add flips file
 
     public static void setUp(String directoryPath) throws IOException {
         directory = new File(directoryPath);
@@ -42,6 +44,7 @@ public class Persistor {
     private static void createRequiredFiles() throws IOException {
         generateFileIfDoesNotExist(SELLS_JSON_FILE);
         generateFileIfDoesNotExist(BUYS_JSON_FILE);
+        generateFileIfDoesNotExist(FLIPS_JSON_FILE); // Create flips file
     }
 
     private static void generateFileIfDoesNotExist(String filename) throws IOException {
@@ -112,5 +115,26 @@ public class Persistor {
             return new ArrayList<Transaction>();
         }
         return sells;
+    }
+
+    // Add methods for saving and loading flips
+    public static boolean saveFlips(List<Flip> flips) {
+        try {
+            saveJson(flips, FLIPS_JSON_FILE);
+            return true;
+        } catch (IOException e) {
+            Log.info("Failed to save flips: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public static List<Flip> loadFlips() throws IOException {
+        String jsonString = getFileContent(FLIPS_JSON_FILE);
+        Type type = new TypeToken<List<Flip>>() {}.getType();
+        List<Flip> flips = gson.fromJson(jsonString, type);
+        if (flips == null) {
+            return new ArrayList<>(); // Return empty list, not null
+        }
+        return flips;
     }
 }

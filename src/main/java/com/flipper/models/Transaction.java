@@ -1,3 +1,4 @@
+// Transaction.java
 package com.flipper.models;
 
 import lombok.Data;
@@ -14,12 +15,14 @@ import com.flipper.helpers.GrandExchange;
 @Data
 public class Transaction {
     public static final double TAX_RATE = 0.01;
+    public static final int MAX_TAX = 5000000;
 
     public final UUID id;
     private int quantity;
     private int totalQuantity;
     private int itemId;
-    private int pricePer;
+    private int finPricePer;
+    private int initPricePer;
     private int slot;
     private String itemName;
     private boolean isBuy;
@@ -40,7 +43,8 @@ public class Transaction {
             int quantity,
             int totalQuantity,
             int itemId,
-            int pricePer,
+            int finPricePer,
+            int initPricePer,
             int slot,
             String itemName,
             boolean isBuy,
@@ -50,7 +54,8 @@ public class Transaction {
         this.quantity = quantity;
         this.totalQuantity = totalQuantity;
         this.itemId = itemId;
-        this.pricePer = pricePer;
+        this.finPricePer = finPricePer;
+        this.initPricePer = initPricePer;
         this.slot = slot;
         this.itemName = itemName;
         this.isBuy = isBuy;
@@ -60,16 +65,16 @@ public class Transaction {
         this.hasCancelledOnce = false;
     }
 
-    public Transaction updateTransaction(GrandExchangeOffer offer, String name) {
+    public Transaction updateTransaction(GrandExchangeOffer offer) {
         this.quantity = offer.getQuantitySold();
         this.totalQuantity = offer.getTotalQuantity();
-        // Check for division by zero!
+        // Calculate and update finPricePer ONLY
         if (offer.getQuantitySold() > 0) {
-            this.pricePer = offer.getSpent() / offer.getQuantitySold();
+            this.finPricePer = offer.getSpent() / offer.getQuantitySold();
         } else {
-            this.pricePer = 0; // Or some other default value
+            this.finPricePer = 0;
         }
-        this.itemName = name;
+
         boolean isCancelState = GrandExchange.checkIsCancelState(offer.getState());
 
         if (!isCancelState || (this.hasCancelledOnce && isCancelState)) {
@@ -82,10 +87,11 @@ public class Transaction {
 
         if (this.isComplete) {
             completedTime = Instant.now();
-            this.totalQuantity = offer.getQuantitySold(); //total quantity should be set to quantity bought/sold at completion
+            this.totalQuantity = offer.getQuantitySold(); // Ensure totalQuantity is updated
         }
         return this;
     }
+
 
     public String describeTransaction() {
         return String.valueOf(this.quantity) + " " + this.itemName + "(s)";
@@ -96,28 +102,24 @@ public class Transaction {
     }
 
     public int getTotalPrice() {
-        return pricePer * quantity;
+        return finPricePer * quantity;
     }
 
     public boolean isFilled() {
         return quantity == totalQuantity;
     }
 
-    /**
-     * The GE floors tax per item.
-     *
-     * @return tax per item of flip
-     */
+
     public int getTax() {
-        return (int) Math.floor((double)this.pricePer * TAX_RATE);
+        if (this.isBuy) {
+            return 0;
+        }
+
+        int tax = (int) Math.floor(this.finPricePer * TAX_RATE);
+        return Math.min(tax, MAX_TAX);
     }
 
-    /**
-     * Gets the total tax of the sale
-     *
-     * @return total tax of sale
-     */
     public int getTotalTax() {
-        return getTax() * quantity;
+        return getTax() * this.quantity;
     }
 }
