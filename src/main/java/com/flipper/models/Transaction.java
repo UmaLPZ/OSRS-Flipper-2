@@ -3,6 +3,7 @@ package com.flipper.models;
 
 import lombok.Data;
 import net.runelite.api.GrandExchangeOffer;
+import net.runelite.api.GrandExchangeOfferState; // Import
 
 import java.time.Instant;
 import java.util.UUID;
@@ -31,13 +32,8 @@ public class Transaction {
     private boolean isAlched;
     private Instant completedTime;
     private Instant createdTime;
-    /**
-     * RuneLite grand exchange subscribing is odd. Interactions are duplicated. This
-     * is only an issue when cancelling buy/sells as the Transaction is being marked
-     * as completed resulting in the second GrandExchangeEvent duplicating the
-     * Transaction See FlipperPlugin::onGrandExchangeOfferChanged
-     */
     private boolean hasCancelledOnce = false;
+    private GrandExchangeOfferState currentState; // Store the current state
 
     public Transaction(
             int quantity,
@@ -67,8 +63,8 @@ public class Transaction {
 
     public Transaction updateTransaction(GrandExchangeOffer offer) {
         this.quantity = offer.getQuantitySold();
-        this.totalQuantity = offer.getTotalQuantity();
-        // Calculate and update finPricePer ONLY
+        this.currentState = offer.getState(); // Store the state
+
         if (offer.getQuantitySold() > 0) {
             this.finPricePer = offer.getSpent() / offer.getQuantitySold();
         } else {
@@ -87,12 +83,9 @@ public class Transaction {
 
         if (this.isComplete) {
             completedTime = Instant.now();
-            this.totalQuantity = offer.getQuantitySold(); // Ensure totalQuantity is updated
         }
         return this;
     }
-
-
     public String describeTransaction() {
         return String.valueOf(this.quantity) + " " + this.itemName + "(s)";
     }
@@ -106,9 +99,11 @@ public class Transaction {
     }
 
     public boolean isFilled() {
-        return quantity == totalQuantity;
+        return currentState == GrandExchangeOfferState.BOUGHT ||
+                currentState == GrandExchangeOfferState.SOLD ||
+                currentState == GrandExchangeOfferState.CANCELLED_BUY ||
+                currentState == GrandExchangeOfferState.CANCELLED_SELL;
     }
-
 
     public int getTax() {
         if (this.isBuy) {
