@@ -6,11 +6,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
+import javax.swing.*;
+import javax.swing.SwingConstants; // Import SwingConstants
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.GridLayout;
-import java.awt.Font;
+import java.awt.*;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -28,6 +27,7 @@ import net.runelite.client.util.ImageUtil;
 public class FlipPage extends JPanel {
     private JPanel container;
     private JLabel totalProfitValueLabel;
+    private JCheckBox shortenProfitCheckbox; // New checkbox
 
     private Consumer<String> onSearchTextChanged;
     private Runnable refreshFlipsRunnable;
@@ -45,8 +45,9 @@ public class FlipPage extends JPanel {
         this.toggleIsTrackingFlipsRunnable = toggleIsTrackingFlipsRunnable;
         this.setLayout(new BorderLayout());
         this.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        constructTotalProfit("0");
+        constructTotalProfitContainer(); // Initialize the total profit container
         this.build(isTrackingFlips);
+        setTotalProfit("0", true); // Initialize with 0 and shortened format
     }
 
     public void addFlipPanel(FlipPanel flipPanel) {
@@ -60,16 +61,19 @@ public class FlipPage extends JPanel {
         container.removeAll();
     }
 
-    private void constructTotalProfit(String totalProfit) {
+    private void constructTotalProfitContainer() {
         JPanel container = new JPanel();
         container.setLayout(new BorderLayout());
-        JPanel totalProfitContainer = new JPanel(new GridLayout(2, 1));
+        JPanel totalProfitContainer = new JPanel(new BorderLayout()); // Back to BorderLayout
+        totalProfitContainer.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-        JPanel totalProfitHeader = new JPanel();
+        // --- Total Profit Header (NORTH) ---
+        JPanel totalProfitHeader = new JPanel(new BorderLayout());
+        totalProfitHeader.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        totalProfitHeader.setBorder(new EmptyBorder(2, 2, 0, 2)); // Add padding
 
         JLabel totalProfitLabel = new JLabel("Flip Profit");
-        totalProfitLabel.setFont(new Font(FontManager.getRunescapeBoldFont().getName(),
-                FontManager.getRunescapeBoldFont().getStyle(), 16));
+        totalProfitLabel.setFont(FontManager.getRunescapeBoldFont());
         totalProfitLabel.setHorizontalAlignment(JLabel.CENTER);
         totalProfitLabel.setForeground(Color.WHITE);
 
@@ -86,18 +90,42 @@ public class FlipPage extends JPanel {
             }
         });
 
-        totalProfitHeader.add(totalProfitLabel);
-        totalProfitHeader.add(refreshFlips);
+        totalProfitHeader.add(totalProfitLabel, BorderLayout.CENTER);
+        totalProfitContainer.add(totalProfitHeader, BorderLayout.NORTH); // Add to NORTH
 
-        totalProfitValueLabel = new JLabel("0");
-        totalProfitValueLabel.setFont(
-                new Font(FontManager.getRunescapeFont().getName(), FontManager.getRunescapeFont().getStyle(), 24));
+        // --- Total Profit Value Label (CENTER) ---
+        totalProfitValueLabel = new JLabel(); // Initialize without text
+        totalProfitValueLabel.setFont(FontManager.getRunescapeFont());
         totalProfitValueLabel.setHorizontalAlignment(JLabel.CENTER);
-        Color totalProfitColor = ColorScheme.GRAND_EXCHANGE_ALCH;
-        totalProfitValueLabel.setForeground(totalProfitColor);
+        totalProfitValueLabel.setForeground(ColorScheme.GRAND_EXCHANGE_ALCH);
+        totalProfitValueLabel.setBorder(new EmptyBorder(2, 0, 0, 0)); // Add padding
+        totalProfitContainer.add(totalProfitValueLabel, BorderLayout.CENTER); // Add to CENTER
 
-        totalProfitContainer.add(totalProfitHeader);
-        totalProfitContainer.add(totalProfitValueLabel);
+        // --- Checkbox Panel (SOUTH) ---
+        JPanel checkboxPanel = new JPanel(new BorderLayout()); // Center the checkbox
+        checkboxPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        checkboxPanel.setBorder(new EmptyBorder(0, 2, 0, 2)); // Add padding
+        shortenProfitCheckbox = new JCheckBox("Use ShortHand");
+        shortenProfitCheckbox.setSelected(true); // Initially checked
+        shortenProfitCheckbox.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        shortenProfitCheckbox.setForeground(Color.WHITE);
+
+        // Position the text to the LEFT of the checkbox
+        shortenProfitCheckbox.setHorizontalTextPosition(SwingConstants.LEFT);
+
+        shortenProfitCheckbox.addActionListener(e -> {
+            String currentTotalProfit = totalProfitValueLabel.getToolTipText();
+            if (currentTotalProfit != null) {
+                setTotalProfit(currentTotalProfit, shortenProfitCheckbox.isSelected());
+            } else {
+                setTotalProfit("0", shortenProfitCheckbox.isSelected());
+            }
+        });
+        checkboxPanel.add(shortenProfitCheckbox, BorderLayout.EAST);
+        checkboxPanel.add(refreshFlips, BorderLayout.WEST);
+        totalProfitContainer.add(checkboxPanel, BorderLayout.SOUTH); // Add to SOUTH
+
+        // --- Add totalProfitContainer to the main container ---
         totalProfitContainer.setBorder(UiUtilities.ITEM_INFO_BORDER);
         container.add(totalProfitContainer, BorderLayout.NORTH);
 
@@ -109,10 +137,40 @@ public class FlipPage extends JPanel {
 
         container.setBorder(new EmptyBorder(0, 0, 3, 0));
         this.add(container, BorderLayout.NORTH);
+
     }
 
-    public void setTotalProfit(String totalProfit) {
-        totalProfitValueLabel.setText(Numbers.numberWithCommas(totalProfit));
+    /**
+     * Sets the total profit label, formatting it according to the useShortFormat flag.
+     * @param totalProfitStr The total profit value (as a String).
+     * @param useShortFormat Whether to use the shortened number format.
+     */
+    public void setTotalProfit(String totalProfitStr, boolean useShortFormat) {
+        try {
+            int totalProfit = Integer.parseInt(totalProfitStr.replace(",", "")); // Remove commas
+            String formattedProfit = useShortFormat
+                    ? Numbers.toShortNumber(totalProfit)
+                    : Numbers.numberWithCommas(totalProfit);
+            totalProfitValueLabel.setText(formattedProfit);
+            totalProfitValueLabel.setToolTipText(Numbers.numberWithCommas(totalProfit)); // Always show full value
+
+            if (totalProfit >= 0) {
+                totalProfitValueLabel.setForeground(ColorScheme.GRAND_EXCHANGE_ALCH);
+            } else {
+                totalProfitValueLabel.setForeground(ColorScheme.PROGRESS_ERROR_COLOR);
+            }
+        } catch (NumberFormatException e) {
+            // Handle the case where the input string is not a valid number.  Maybe log a warning.
+            totalProfitValueLabel.setText("Error");
+            totalProfitValueLabel.setToolTipText(null); // No tooltip
+        }
+    }
+    /**
+     * Overload setTotalProfit to use existing checkbox
+     * @param totalProfitStr The total profit value (as a String).
+     */
+    public void setTotalProfit(String totalProfitStr) {
+        setTotalProfit(totalProfitStr, this.shortenProfitCheckbox.isSelected());
     }
 
     public void build(Boolean isTrackingFlips) {

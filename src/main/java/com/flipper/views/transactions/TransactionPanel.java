@@ -129,7 +129,7 @@ public class TransactionPanel extends JPanel {
     private JLabel newLeftLabel(String text) {
         JLabel newJLabel = new JLabel(text);
         newJLabel.setForeground(ColorScheme.GRAND_EXCHANGE_PRICE);
-        newJLabel.setBorder(new EmptyBorder(2, 2, 2, 0));
+        newJLabel.setBorder(new EmptyBorder(2, 2, 2, 2));
         return newJLabel;
     }
 
@@ -137,7 +137,7 @@ public class TransactionPanel extends JPanel {
         JLabel newRightLabel = new JLabel(value);
         newRightLabel.setHorizontalAlignment(JLabel.RIGHT);
         newRightLabel.setForeground(fontColor);
-        newRightLabel.setBorder(new EmptyBorder(2, 0, 2, 2));
+        newRightLabel.setBorder(new EmptyBorder(2, 2, 2, 2));
         return newRightLabel;
     }
 
@@ -158,18 +158,25 @@ public class TransactionPanel extends JPanel {
         contentPanel1.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
         // Initial Quantity
-        JPanel initQuantityPanel = new JPanel(new BorderLayout()); // Renamed
+        JPanel initQuantityPanel = new JPanel(new BorderLayout());
         initQuantityPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        String quantityValueTextInit = Numbers.numberWithCommas(transaction.getTotalQuantity()); // Total quantity
-        initQuantityPanel.add(newLeftLabel("Quantity:"), BorderLayout.WEST);
-        initQuantityPanel.add(newRightLabel(quantityValueTextInit, ColorScheme.GRAND_EXCHANGE_ALCH), BorderLayout.EAST);
+        String quantityValueTextInit = Numbers.numberWithCommas(transaction.getTotalQuantity());
+        JLabel quantityLabelInit = newLeftLabel("Quantity:");
+        JLabel quantityValueLabelInit = newRightLabel(quantityValueTextInit, ColorScheme.GRAND_EXCHANGE_ALCH);
+        initQuantityPanel.add(quantityLabelInit, BorderLayout.WEST);
+        initQuantityPanel.add(quantityValueLabelInit, BorderLayout.EAST);
         contentPanel1.add(initQuantityPanel);
 
         // Init Price Per
         JPanel initPricePanel = new JPanel(new BorderLayout());
         initPricePanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        initPricePanel.add(newLeftLabel("Price Per:"), BorderLayout.WEST);
-        initPricePanel.add(newRightLabel(Numbers.numberWithCommas(transaction.getInitPricePer()), ColorScheme.GRAND_EXCHANGE_ALCH), BorderLayout.EAST);
+        int initPricePer = transaction.getInitPricePer();
+        String initPricePerText = Numbers.toShortNumber(initPricePer);
+        JLabel pricePerLabelInit = newLeftLabel("Price Per:");
+        JLabel pricePerValueLabelInit = newRightLabel(initPricePerText, ColorScheme.GRAND_EXCHANGE_ALCH);
+        pricePerValueLabelInit.setToolTipText(Numbers.numberWithCommas(initPricePer)); // Tooltip
+        initPricePanel.add(pricePerLabelInit, BorderLayout.WEST);
+        initPricePanel.add(pricePerValueLabelInit, BorderLayout.EAST);
         contentPanel1.add(initPricePanel);
 
         // Tax Per (Conditional, for Sells)
@@ -177,17 +184,25 @@ public class TransactionPanel extends JPanel {
             JPanel taxPanel = new JPanel(new BorderLayout());
             taxPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
             int initialTax = calculateTax(transaction.getInitPricePer());
-            taxPanel.add(newLeftLabel("Tax Per:"), BorderLayout.WEST);
-            taxPanel.add(newRightLabel(Numbers.numberWithCommas(initialTax), ColorScheme.PROGRESS_ERROR_COLOR), BorderLayout.EAST);
+            String initialTaxText = Numbers.toShortNumber(initialTax);
+            JLabel taxLabel = newLeftLabel("Tax Per:");
+            JLabel taxValueLabel = newRightLabel(initialTaxText, ColorScheme.PROGRESS_ERROR_COLOR);
+            taxValueLabel.setToolTipText(Numbers.numberWithCommas(initialTax)); // Tooltip
+            taxPanel.add(taxLabel, BorderLayout.WEST);
+            taxPanel.add(taxValueLabel, BorderLayout.EAST);
             contentPanel1.add(taxPanel);
         }
 
         // Init Total
         JPanel initTotalPanel = new JPanel(new BorderLayout());
         initTotalPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        initTotalPanel.add(newLeftLabel("Total Value:"), BorderLayout.WEST);
-        int initTotalValue = transaction.getInitPricePer() * transaction.getQuantity(); // Use transaction.getQuantity()
-        initTotalPanel.add(newRightLabel(Numbers.numberWithCommas(initTotalValue), ColorScheme.GRAND_EXCHANGE_ALCH), BorderLayout.EAST);
+        int initTotalValue = transaction.getInitPricePer() * transaction.getQuantity();
+        String initTotalValueText = Numbers.toShortNumber(initTotalValue);
+        JLabel totalValueLabelInit =  newLeftLabel("Total Value:");
+        JLabel totalValueValueLabelInit = newRightLabel(initTotalValueText, ColorScheme.GRAND_EXCHANGE_ALCH);
+        totalValueValueLabelInit.setToolTipText(Numbers.numberWithCommas(initTotalValue)); // Tooltip
+        initTotalPanel.add(totalValueLabelInit, BorderLayout.WEST);
+        initTotalPanel.add(totalValueValueLabelInit, BorderLayout.EAST);
         contentPanel1.add(initTotalPanel);
 
         column1.add(contentPanel1, BorderLayout.CENTER);
@@ -200,18 +215,25 @@ public class TransactionPanel extends JPanel {
         contentPanel2.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
         // Final Quantity
-        JPanel finQuantityPanel = new JPanel(new BorderLayout()); // Renamed
+        JPanel finQuantityPanel = new JPanel(new BorderLayout());
         finQuantityPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        String quantityValueTextFin = Numbers.numberWithCommas(transaction.getQuantity()); // Sold quantity
-        finQuantityPanel.add(newLeftLabel("Quantity:"), BorderLayout.WEST);
-        finQuantityPanel.add(newRightLabel(quantityValueTextFin, ColorScheme.GRAND_EXCHANGE_ALCH), BorderLayout.EAST);
+        String quantityValueTextFin = Numbers.numberWithCommas(transaction.getQuantity());
+        JLabel quantityLabelFin = newLeftLabel("Quantity:");
+        JLabel quantityValueLabelFin = newRightLabel(quantityValueTextFin, ColorScheme.GRAND_EXCHANGE_ALCH);
+        finQuantityPanel.add(quantityLabelFin, BorderLayout.WEST);
+        finQuantityPanel.add(quantityValueLabelFin, BorderLayout.EAST);
         contentPanel2.add(finQuantityPanel);
 
         // Fin Price Per
         JPanel finPricePanel = new JPanel(new BorderLayout());
         finPricePanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        finPricePanel.add(newLeftLabel("Price Per:"), BorderLayout.WEST);
-        finPricePanel.add(newRightLabel(Numbers.numberWithCommas(transaction.getFinPricePer()), ColorScheme.GRAND_EXCHANGE_ALCH), BorderLayout.EAST);
+        int finPricePer = transaction.getFinPricePer();
+        String finPricePerText = Numbers.toShortNumber(finPricePer);
+        JLabel pricePerLabelFin = newLeftLabel("Price Per:");
+        JLabel pricePerValueLabelFin = newRightLabel(finPricePerText, ColorScheme.GRAND_EXCHANGE_ALCH);
+        pricePerValueLabelFin.setToolTipText(Numbers.numberWithCommas(finPricePer)); // Tooltip
+        finPricePanel.add(pricePerLabelFin, BorderLayout.WEST);
+        finPricePanel.add(pricePerValueLabelFin, BorderLayout.EAST);
         contentPanel2.add(finPricePanel);
 
         // Tax Per (Conditional, for Sells)
@@ -219,17 +241,25 @@ public class TransactionPanel extends JPanel {
             JPanel taxPanel = new JPanel(new BorderLayout());
             taxPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
             int finalTax = calculateTax(transaction.getFinPricePer());
-            taxPanel.add(newLeftLabel("Tax Per:"), BorderLayout.WEST);
-            taxPanel.add(newRightLabel(Numbers.numberWithCommas(finalTax), ColorScheme.PROGRESS_ERROR_COLOR), BorderLayout.EAST);
+            String finalTaxText = Numbers.toShortNumber(finalTax);
+            JLabel taxLabel = newLeftLabel("Tax Per:");
+            JLabel taxValueLabel = newRightLabel(finalTaxText, ColorScheme.PROGRESS_ERROR_COLOR);
+            taxValueLabel.setToolTipText(Numbers.numberWithCommas(finalTax)); // Tooltip
+            taxPanel.add(taxLabel, BorderLayout.WEST);
+            taxPanel.add(taxValueLabel, BorderLayout.EAST);
             contentPanel2.add(taxPanel);
         }
 
         // Fin Total
         JPanel finTotalPanel = new JPanel(new BorderLayout());
         finTotalPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        finTotalPanel.add(newLeftLabel("Total Value:"), BorderLayout.WEST);
         int finTotalValue = transaction.getFinPricePer() * transaction.getQuantity();
-        finTotalPanel.add(newRightLabel(Numbers.numberWithCommas(finTotalValue), ColorScheme.GRAND_EXCHANGE_ALCH), BorderLayout.EAST);
+        String finTotalValueText = Numbers.toShortNumber(finTotalValue);
+        JLabel totalValueLabelFin = newLeftLabel("Total Value:");
+        JLabel totalValueValueLabelFin = newRightLabel(finTotalValueText, ColorScheme.GRAND_EXCHANGE_ALCH);
+        totalValueValueLabelFin.setToolTipText(Numbers.numberWithCommas(finTotalValue)); // Tooltip
+        finTotalPanel.add(totalValueLabelFin, BorderLayout.WEST);
+        finTotalPanel.add(totalValueValueLabelFin, BorderLayout.EAST);
         contentPanel2.add(finTotalPanel);
 
         column2.add(contentPanel2, BorderLayout.CENTER);
