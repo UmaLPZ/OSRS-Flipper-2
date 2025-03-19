@@ -1,52 +1,46 @@
-# Flipper plugin for RuneLite
+# Flipper 2 plugin for RuneLite
 
-Plugin for RuneLite to track buys, sells, flips, and margin checks
+Plugin for RuneLite to track buys, sells, flips, and in-progress offers forked from the original [Flipper Plugin by OkayestDev](https://github.com/OkayestDev/OSRS-Flipper). I also included the tax feature initially created by [StrawberrySandwich](https://github.com/StrawberrySandwich/OSRS-Flipper/tree/feature/add-tax) that was never added to the plugin.
+
+I removed the connection to the Flipper website since it has also gone down and this plugin will not pull any item data from the wiki. Because there is no data from the wiki I also removed the high-alch function.
+All data is pulled from the RuneLite api and everything is done and stored locally in some JSON files.
 
 ## Support
+There will be a lot of bugs because I am not that great at programming. It should work but there might be some issues due to my limited testing.
+<br />
 
-If you notice any bugs or have any suggestions, let us know by making an [issue](https://github.com/Sir-Kyle-Richardson/OSRS-flipper/issues), contact me on Discord Encounter#0899, or submit a enquiry through the [flipper website](https://www.osrs-flipper.com/info/contact-us)
-
-Join the [discord](https://discord.gg/uBsWGSJ9Q7)
+If you notice any bugs or have any suggestions please let me know by making an [issue](https://github.com/UmaLPZ/OSRS-Flipper-2/issues). Please include a detailed description of the issue and a screenshot if possible.
 
 ## Features
 
 Track Buys:
 
 <p>
-    <img src="https://imgur.com/uraxDdX.png" width="600px">
+    <img src="https://i.imgur.com/Qr9MzrW.png" max-width="600px">
 </p>
 
 Track Sells:
 
 <p>
-    <img src="https://imgur.com/FH9ARzG.png" width="600px">
+    <img src="https://i.imgur.com/WHe5TjL.png" max-width="600px">
 </p>
 
 Track Flips:
 
 <p>
-    <img src="https://imgur.com/TbHA9AE.png" width="600px">
+    <img src="https://i.imgur.com/NdT5GQz.png" max-width="600px">
 </p>
 
-Track Margins:
+View In-Progress Offers:
 
 <p>
-    <img src="https://imgur.com/iPlxEWr.png" width="600px">
+    <img src="https://i.imgur.com/G9PfDi9.png" max-width="600px">
 </p>
 
 ## Changelog
 
 v1.0 <br />
 
-- Plugin added!
+- Plugin added
 
-v1.1.0 <br />
 
-- Added ability to delete flips, margin checks, buys, and sells
-
-v1.2.0 <br />
-
-- Fixed issue causing stutters when switching between tabs
-- Introduced Users
-- Introduced Flipper API when saving flips to allow cross-platform access of flips
-- Note: buys, sells, & margins are still stored locally
