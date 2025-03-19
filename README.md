@@ -5,6 +5,8 @@ Plugin for RuneLite to track buys, sells, flips, and in-progress offers forked f
 I removed the connection to the Flipper website since it has also gone down and this plugin will not pull any item data from the wiki. Because there is no data from the wiki I also removed the high-alch function.
 All data is pulled from the RuneLite api and everything is done and stored locally in some JSON files.
 
+Unfortunetly the original Flipper JSON files are not compatable with this plugin. This version relabled some values as well as added a couple new ones. Trying to use old JSON files will likely lead to the the plugin breaking.
+
 ## Support
 There will be a lot of bugs because I am not that great at programming. It should work but there might be some issues due to my limited testing.
 <br />
