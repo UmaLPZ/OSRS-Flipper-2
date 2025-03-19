@@ -11,7 +11,7 @@ public class Log {
 
     public static void info(String message) {
         if (DEV_MODE) {
-            System.out.println("FLIPPER PLUGIN: " + message);
+            log.debug("FLIPPER PLUGIN: " + message);
         }
     }
 }
