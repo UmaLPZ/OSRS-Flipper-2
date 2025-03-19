@@ -36,6 +36,7 @@ import com.flipper2.helpers.UiUtilities;
 import com.flipper2.models.Transaction;
 import com.flipper2.views.TabManager;
 import com.flipper2.views.inprogress.InProgressPage;
+import com.google.gson.Gson;
 import com.google.inject.Provides;
 
 import java.io.IOException;
@@ -75,7 +76,6 @@ public class FlipperPlugin extends Plugin {
     private ClientThread cThread;
     @Inject
     private Client client;
-
     private BuysController buysController;
     private SellsController sellsController;
     private FlipsController flipsController;
