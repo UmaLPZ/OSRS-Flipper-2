@@ -6,8 +6,6 @@ import com.flipper2.models.Transaction;
 import net.runelite.client.RuneLite;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-
-import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -21,8 +19,8 @@ import java.util.List;
  * Read/Writes information to json file for storage
  */
 public class Persistor {
-    @Inject
-    private static Gson gson;
+    //Now uses injected Gson
+    public static Gson gson;
     public static final File PARENT_DIRECTORY = new File(RuneLite.RUNELITE_DIR, "flipper2");
     public static File directory;
     public static final String SELLS_JSON_FILE = "flipper2-sells.json";

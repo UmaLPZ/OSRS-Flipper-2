@@ -84,11 +84,14 @@ public class FlipperPlugin extends Plugin {
     private TabManager tabManager;
     @Inject
     private InProgressPage inProgressPage;
+    @Inject
+    private Gson gson;
 
     @Override
     protected void startUp() throws Exception {
         try {
             Persistor.setUp();
+            Persistor.gson = this.gson;
             this.tabManager = new TabManager();
             this.setUpNavigationButton();
             this.buysController = new BuysController(itemManager, config, cThread);
