@@ -1,6 +1,6 @@
 # Flipper 2 plugin for RuneLite
 
-Plugin for RuneLite to track buys, sells, flips, and in-progress offers forked from the original [Flipper Plugin by OkayestDev](https://github.com/OkayestDev/OSRS-Flipper). I also included a tax feature (with some modifications) initially created by [StrawberrySandwich](https://github.com/StrawberrySandwich/OSRS-Flipper/tree/feature/add-tax) that was never added to the original Flipper plugin but seemed too helpful not to include.
+Plugin for RuneLite to track buys, sells, flips, and in-progress offers forked from the original [Flipper Plugin by OkayestDev](https://github.com/OkayestDev/OSRS-Flipper). I also included a tax feature (with some modifications) initially created by [StrawberrySandwich](https://github.com/StrawberrySandwich/OSRS-Flipper/tree/feature/add-tax) that was never added to the original Flipper plugin but seemed too helpful not to include. This plugin also includes some code from the Grand Exchange plugin for the In-Progress tab.
 
 I removed the connection to the Flipper website since it has also gone down and this plugin will not pull any item data from the wiki. Because there is no data from the wiki I also removed the high-alch function.
 All data is pulled from the RuneLite api and everything is done and stored locally in some JSON files.

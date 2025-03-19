@@ -6,6 +6,8 @@ import com.flipper2.models.Transaction;
 import net.runelite.client.RuneLite;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+
+import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -19,12 +21,13 @@ import java.util.List;
  * Read/Writes information to json file for storage
  */
 public class Persistor {
-    public static Gson gson = new Gson();
+    @Inject
+    private static Gson gson;
     public static final File PARENT_DIRECTORY = new File(RuneLite.RUNELITE_DIR, "flipper2");
     public static File directory;
     public static final String SELLS_JSON_FILE = "flipper2-sells.json";
     public static final String BUYS_JSON_FILE = "flipper2-buys.json";
-    public static final String FLIPS_JSON_FILE = "flipper2-flips.json"; // Add flips file
+    public static final String FLIPS_JSON_FILE = "flipper2-flips.json";
 
     public static void setUp(String directoryPath) throws IOException {
         directory = new File(directoryPath);
