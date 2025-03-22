@@ -41,7 +41,7 @@ View In-Progress Offers:
 
 ## Changelog
 
-v1.0 <br />
+v1.0.1 <br />
 
 - Plugin added
 
