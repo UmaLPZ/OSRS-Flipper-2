@@ -19,7 +19,6 @@ import java.util.List;
  * Read/Writes information to json file for storage
  */
 public class Persistor {
-    //Now uses injected Gson
     public static Gson gson;
     public static final File PARENT_DIRECTORY = new File(RuneLite.RUNELITE_DIR, "flipper2");
     public static File directory;
@@ -118,7 +117,6 @@ public class Persistor {
         return sells;
     }
 
-    // Add methods for saving and loading flips
     public static boolean saveFlips(List<Flip> flips) {
         try {
             saveJson(flips, FLIPS_JSON_FILE);
@@ -134,7 +132,7 @@ public class Persistor {
         Type type = new TypeToken<List<Flip>>() {}.getType();
         List<Flip> flips = gson.fromJson(jsonString, type);
         if (flips == null) {
-            return new ArrayList<>(); // Return empty list, not null
+            return new ArrayList<>();
         }
         return flips;
     }
