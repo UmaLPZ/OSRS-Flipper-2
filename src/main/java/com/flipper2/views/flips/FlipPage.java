@@ -67,7 +67,7 @@ public class FlipPage extends JPanel {
         JPanel totalProfitContainer = new JPanel(new BorderLayout());
         totalProfitContainer.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-        // --- Total Profit Header (NORTH) ---
+
         JPanel totalProfitHeader = new JPanel(new BorderLayout());
         totalProfitHeader.setBackground(ColorScheme.DARK_GRAY_COLOR);
         totalProfitHeader.setBorder(new EmptyBorder(2, 2, 0, 2));

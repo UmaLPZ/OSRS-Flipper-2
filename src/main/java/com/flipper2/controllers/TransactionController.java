@@ -151,7 +151,7 @@ public class TransactionController {
         if (this.searchText == "" || this.searchText == null) {
             this.filteredTransactions = this.transactions;
         } else {
-            // Create filtered list
+
             Iterator<Transaction> transactionIter = this.transactions.iterator();
             this.filteredTransactions = new ArrayList<Transaction>();
             while (transactionIter.hasNext()) {
