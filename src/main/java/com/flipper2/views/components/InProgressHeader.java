@@ -16,6 +16,8 @@ import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.api.ItemComposition;
 
+import static com.flipper2.helpers.GrandExchange.checkIsBuy;
+
 public class InProgressHeader extends JPanel {
 
     public InProgressHeader(ItemComposition item, BufferedImage itemImage, GrandExchangeOffer offer) {
@@ -52,11 +54,13 @@ public class InProgressHeader extends JPanel {
     }
 
     private JLabel constructOfferTypeLabel(GrandExchangeOffer offer) {
-        String offerType = offer.getState() == GrandExchangeOfferState.BUYING ? "Buy" : "Sell";
+        GrandExchangeOfferState state = offer.getState();
+        boolean isBuy = checkIsBuy(state);
+        String offerType = (isBuy ? "Buy" : "Sell");
         JLabel offerTypeLabel = new JLabel(offerType);
         offerTypeLabel.setHorizontalAlignment(JLabel.RIGHT);
 
-        if (offer.getState() == GrandExchangeOfferState.BUYING) {
+        if (isBuy) {
             offerTypeLabel.setForeground(ColorScheme.GRAND_EXCHANGE_ALCH);
         } else {
             offerTypeLabel.setForeground(ColorScheme.PROGRESS_ERROR_COLOR);

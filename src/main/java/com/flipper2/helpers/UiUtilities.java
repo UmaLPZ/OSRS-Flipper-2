@@ -21,7 +21,7 @@ public class UiUtilities {
     public static final int ITEMS_PER_PAGE = 15;
 
 
-    // Colors
+
     public static final Color GREEN = Color.decode("#2ea043");
     public static final Color ORANGE = Color.decode("#e78709");
     public static final Color BLUE = Color.decode("#388bfd");

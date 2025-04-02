@@ -167,7 +167,7 @@ public class FlipPanel extends JPanel {
         String sellPriceText = Numbers.toShortNumber(sellPrice);
         JLabel sellPriceLabel = newLeftLabel("Sell Price:");
         JLabel sellPriceValue = newRightLabel(sellPriceText, ColorScheme.GRAND_EXCHANGE_ALCH);
-        sellPriceValue.setToolTipText(Numbers.numberWithCommas(sellPrice)); // Tooltip
+        sellPriceValue.setToolTipText(Numbers.numberWithCommas(sellPrice));
 
         sellPricePanel.add(sellPriceLabel, BorderLayout.WEST);
         sellPricePanel.add(sellPriceValue, BorderLayout.EAST);

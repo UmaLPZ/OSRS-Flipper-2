@@ -41,6 +41,11 @@ View In-Progress Offers:
 
 ## Changelog
 
+v1.0.2 <br />
+- Fixed In Progress Panel displaying the wrong offer type
+- Fixed In Progress Panel showing "Spent/Spent Per" instead of "Received/Received Per" on Sell offers
+- Removed unnecessary debug boolean option
+
 v1.0.1 <br />
 
 - Plugin added

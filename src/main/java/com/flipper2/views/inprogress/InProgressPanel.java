@@ -17,6 +17,8 @@ import net.runelite.api.GrandExchangeOfferState;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.api.ItemComposition;
 
+import static com.flipper2.helpers.GrandExchange.checkIsBuy;
+
 public class InProgressPanel extends JPanel {
     private JPanel container;
     private JPanel itemInfoContainer;
@@ -109,6 +111,9 @@ public class InProgressPanel extends JPanel {
         itemInfoContainer.add(column2);
     }
     public void updateOffer(ItemComposition offerItem, BufferedImage itemImage, GrandExchangeOffer offer) {
+        GrandExchangeOfferState state = offer.getState();
+        boolean isBuy = checkIsBuy(state);
+
         if (container.getComponentCount() == 3) {
             container.remove(2);
             container.remove(1);
@@ -119,7 +124,7 @@ public class InProgressPanel extends JPanel {
 
         JPanel titlePanel = new JPanel(new GridLayout(1, 1, 0, 0));
         titlePanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        String offerType = offer.getState() == GrandExchangeOfferState.BUYING ? "Buy" : "Sell";
+        String offerType = (isBuy ? "Buy" : "Sell");
         JLabel offerTypeLabel = new JLabel(offerType);
         offerTypeLabel.setHorizontalAlignment(JLabel.CENTER);
         offerTypeLabel.setForeground(ColorScheme.GRAND_EXCHANGE_PRICE);
@@ -162,10 +167,17 @@ public class InProgressPanel extends JPanel {
         pricePerValue.setText(Numbers.toShortNumber(price));
         pricePerValue.setToolTipText(Numbers.numberWithCommas(price));
 
+        String spentType = (isBuy ? "Spent" : "Received");
+        JLabel spentTypeValue = (JLabel) ((JPanel) contentPanel2.getComponent(0)).getComponent(0);
+        spentTypeValue.setText(spentType);
 
         JLabel spentValue = (JLabel) ((JPanel) contentPanel2.getComponent(0)).getComponent(1);
         spentValue.setText(Numbers.toShortNumber(spent));
         spentValue.setToolTipText(Numbers.numberWithCommas(spent));
+
+        String spentTypePer = (isBuy ? "Spent Per" : "Received Per");
+        JLabel spentTypePerValue = (JLabel) ((JPanel) contentPanel2.getComponent(1)).getComponent(0);
+        spentTypePerValue.setText(spentTypePer);
 
         int spentPer = (quantitySold > 0) ? spent / quantitySold : 0;
         JLabel spentPerValue = (JLabel) ((JPanel) contentPanel2.getComponent(1)).getComponent(1);

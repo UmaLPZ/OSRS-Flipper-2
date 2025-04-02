@@ -160,7 +160,7 @@ public class FlipsController {
     }
 
     private boolean isRender(Flip flip) {
-        // Ensure item name is loaded.
+
         if (flip.getItemName() == null) {
             ItemComposition itemComp = itemManager.getItemComposition(flip.getItemId());
             flip.setItemName(itemComp.getName());

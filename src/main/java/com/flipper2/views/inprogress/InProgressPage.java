@@ -17,15 +17,12 @@ import java.util.Arrays;
 public class InProgressPage extends JPanel {
     private JPanel container;
     private static final int MAX_OFFERS = 8;
-
     private InProgressPanel[] inProgressPanels = new InProgressPanel[MAX_OFFERS];
-
     public InProgressPage() {
         this.setLayout(new BorderLayout());
         this.setBackground(ColorScheme.DARK_GRAY_COLOR);
         this.build();
     }
-
     public void resetOffers()
     {
         container.removeAll();
@@ -33,11 +30,7 @@ public class InProgressPage extends JPanel {
         revalidate();
         repaint();
     }
-
-
-
     public void build() {
-
         container = new JPanel();
         container.setBorder(new EmptyBorder(5, 0, 0, 0));
         container.setLayout(new BoxLayout(container, BoxLayout.PAGE_AXIS));
@@ -67,7 +60,6 @@ public class InProgressPage extends JPanel {
             }
             return;
         }
-
         /* If slot was empty, and is now filled, add it to the list */
         InProgressPanel offerSlot = inProgressPanels[slot];
         if (offerSlot == null) {
