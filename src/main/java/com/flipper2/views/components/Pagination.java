@@ -13,52 +13,62 @@ import javax.swing.JPanel;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 
-public class Pagination {
+public class Pagination
+{
 	private Consumer<Object> renderItemCallback;
 	private Runnable buildViewCallback;
 	private int itemsPerPage;
 	private int page;
 
 	public Pagination(
-		Consumer<Object> renderItemCallback, 
+		Consumer<Object> renderItemCallback,
 		int itemsPerPage,
 		Runnable buildViewCallback
-	) {
+	)
+	{
 		this.itemsPerPage = itemsPerPage;
 		this.renderItemCallback = renderItemCallback;
 		this.page = 1;
 		this.buildViewCallback = buildViewCallback;
 	}
 
-	public void resetPage() {
+	public void resetPage()
+	{
 		this.page = 1;
 	}
 
-	public <T> void renderList(List<T> items) {
+	public <T> void renderList(List<T> items)
+	{
 		int endIndex = items.size() - (page * itemsPerPage) - 1;
-		if (endIndex < 0) {
+		if (endIndex < 0)
+		{
 			endIndex = -1;
 		}
 		int startIndex = items.size() - ((page - 1) * itemsPerPage) - 1;
-		for (int i = startIndex; i > endIndex; i--) {
+		for (int i = startIndex; i > endIndex; i--)
+		{
 			this.renderItemCallback.accept(items.get(i));
 		}
 	}
 
-	public <T> void renderFromBeginning(List<T> items) {
+	public <T> void renderFromBeginning(List<T> items)
+	{
 		int startIndex = (page - 1) * itemsPerPage;
 		int endIndex = (page * itemsPerPage) - 1;
 
-		if (endIndex > items.size()) {
+		if (endIndex > items.size())
+		{
 			endIndex = items.size();
 		}
 
-		for (int i = startIndex; i < endIndex; i++) {
+		for (int i = startIndex; i < endIndex; i++)
+		{
 			this.renderItemCallback.accept(items.get(i));
 		}
 	}
 
-	public <T> JPanel getComponent(List<T> items) {
+	public <T> JPanel getComponent(List<T> items)
+	{
 		JPanel container = new JPanel(new BorderLayout());
 
 		int numberOfPages = (int) Math.round(
@@ -70,27 +80,34 @@ public class Pagination {
 		JLabel previous = new JLabel("<");
 		previous.setFont(FontManager.getRunescapeBoldFont());
 		previous.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-		previous.addMouseListener(new MouseAdapter() {
+		previous.addMouseListener(new MouseAdapter()
+		{
 			@Override
-			public void mouseClicked(MouseEvent e) {
-				if (page != 1) {
+			public void mouseClicked(MouseEvent e)
+			{
+				if (page != 1)
+				{
 					page--;
 					buildViewCallback.run();
-				} else {
+				}
+				else
+				{
 					page = numberOfPages;
 					buildViewCallback.run();
 				}
 			}
 
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                previous.setForeground(ColorScheme.BRAND_ORANGE);
-            }
+			@Override
+			public void mouseEntered(MouseEvent e)
+			{
+				previous.setForeground(ColorScheme.BRAND_ORANGE);
+			}
 
-            @Override
-            public void mouseExited(MouseEvent e) {
-                previous.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-            }
+			@Override
+			public void mouseExited(MouseEvent e)
+			{
+				previous.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+			}
 		});
 
 		JLabel pageLabel = new JLabel(page + " of " + numberOfPages);
@@ -99,27 +116,34 @@ public class Pagination {
 		JLabel next = new JLabel(">");
 		next.setFont(FontManager.getRunescapeBoldFont());
 		next.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-		next.addMouseListener(new MouseAdapter() {
+		next.addMouseListener(new MouseAdapter()
+		{
 			@Override
-			public void mouseClicked(MouseEvent e) {
-				if (page < numberOfPages) {
+			public void mouseClicked(MouseEvent e)
+			{
+				if (page < numberOfPages)
+				{
 					page++;
 					buildViewCallback.run();
-				} else {
+				}
+				else
+				{
 					page = 1;
 					buildViewCallback.run();
 				}
 			}
 
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                next.setForeground(ColorScheme.BRAND_ORANGE);
-            }
+			@Override
+			public void mouseEntered(MouseEvent e)
+			{
+				next.setForeground(ColorScheme.BRAND_ORANGE);
+			}
 
-            @Override
-            public void mouseExited(MouseEvent e) {
-                next.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-            }
+			@Override
+			public void mouseExited(MouseEvent e)
+			{
+				next.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+			}
 		});
 
 		container.add(previous, BorderLayout.WEST);
