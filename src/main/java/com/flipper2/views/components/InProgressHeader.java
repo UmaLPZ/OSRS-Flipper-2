@@ -17,54 +17,65 @@ import net.runelite.client.ui.FontManager;
 import net.runelite.api.ItemComposition;
 
 import static com.flipper2.helpers.GrandExchange.checkIsBuy;
+import static com.flipper2.helpers.UiUtilities.truncateString;
 
-public class InProgressHeader extends JPanel {
+public class InProgressHeader extends JPanel
+{
 
-    public InProgressHeader(ItemComposition item, BufferedImage itemImage, GrandExchangeOffer offer) {
-        this.setLayout(new BorderLayout());
-        this.setBackground(ColorScheme.DARKER_GRAY_COLOR.darker());
+	public InProgressHeader(ItemComposition item, BufferedImage itemImage, GrandExchangeOffer offer)
+	{
+		this.setLayout(new BorderLayout());
+		this.setBackground(ColorScheme.DARKER_GRAY_COLOR.darker());
 
-        JPanel itemIconPanel = constructItemIcon(itemImage);
-        JLabel itemNameLabel = constructItemName(item.getName());
-        JLabel offerTypeLabel = constructOfferTypeLabel(offer);
+		JPanel itemIconPanel = constructItemIcon(itemImage);
+		JLabel itemNameLabel = constructItemName(item.getName());
+		JLabel offerTypeLabel = constructOfferTypeLabel(offer);
 
-        this.add(itemIconPanel, BorderLayout.WEST);
-        this.add(itemNameLabel, BorderLayout.CENTER);
-        this.add(offerTypeLabel, BorderLayout.EAST);
 
-        this.setBorder(new EmptyBorder(2, 1, 2, 5));
-    }
+		this.add(itemIconPanel, BorderLayout.WEST);
+		this.add(itemNameLabel, BorderLayout.CENTER);
+		this.add(offerTypeLabel, BorderLayout.EAST);
 
-    private JPanel constructItemIcon(BufferedImage itemImage) {
-        JLabel itemIcon = new JLabel();
-        itemIcon.setAlignmentX(Component.LEFT_ALIGNMENT);
-        itemIcon.setPreferredSize(UiUtilities.ICON_SIZE);
-        itemIcon.setIcon(new ImageIcon(itemImage));
-        JPanel itemIconPanel = new JPanel(new BorderLayout());
-        itemIconPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR.darker());
-        itemIconPanel.add(itemIcon, BorderLayout.WEST);
-        return itemIconPanel;
-    }
+		this.setBorder(new EmptyBorder(2, 1, 2, 5));
+	}
 
-    private JLabel constructItemName(String itemName) {
-        JLabel itemNameLabel = new JLabel(itemName, SwingConstants.CENTER);
-        itemNameLabel.setForeground(Color.WHITE);
-        itemNameLabel.setFont(FontManager.getRunescapeBoldFont());
-        return itemNameLabel;
-    }
+	private JPanel constructItemIcon(BufferedImage itemImage)
+	{
+		JLabel itemIcon = new JLabel();
+		itemIcon.setAlignmentX(Component.LEFT_ALIGNMENT);
+		itemIcon.setPreferredSize(UiUtilities.ICON_SIZE);
+		itemIcon.setIcon(new ImageIcon(itemImage));
+		JPanel itemIconPanel = new JPanel(new BorderLayout());
+		itemIconPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR.darker());
+		itemIconPanel.add(itemIcon, BorderLayout.WEST);
+		return itemIconPanel;
+	}
 
-    private JLabel constructOfferTypeLabel(GrandExchangeOffer offer) {
-        GrandExchangeOfferState state = offer.getState();
-        boolean isBuy = checkIsBuy(state);
-        String offerType = (isBuy ? "Buy" : "Sell");
-        JLabel offerTypeLabel = new JLabel(offerType);
-        offerTypeLabel.setHorizontalAlignment(JLabel.RIGHT);
+	private JLabel constructItemName(String itemName)
+	{
+		JLabel itemNameLabel = new JLabel(truncateString(itemName, 20), SwingConstants.CENTER);
+		itemNameLabel.setForeground(Color.WHITE);
+		itemNameLabel.setFont(FontManager.getRunescapeBoldFont());
+		itemNameLabel.setToolTipText(itemName);
+		return itemNameLabel;
+	}
 
-        if (isBuy) {
-            offerTypeLabel.setForeground(ColorScheme.GRAND_EXCHANGE_ALCH);
-        } else {
-            offerTypeLabel.setForeground(ColorScheme.PROGRESS_ERROR_COLOR);
-        }
-        return offerTypeLabel;
-    }
+	private JLabel constructOfferTypeLabel(GrandExchangeOffer offer)
+	{
+		GrandExchangeOfferState state = offer.getState();
+		boolean isBuy = checkIsBuy(state);
+		String offerType = (isBuy ? "Buy" : "Sell");
+		JLabel offerTypeLabel = new JLabel(offerType);
+		offerTypeLabel.setHorizontalAlignment(JLabel.RIGHT);
+
+		if (isBuy)
+		{
+			offerTypeLabel.setForeground(ColorScheme.GRAND_EXCHANGE_ALCH);
+		}
+		else
+		{
+			offerTypeLabel.setForeground(ColorScheme.GRAND_EXCHANGE_PRICE);
+		}
+		return offerTypeLabel;
+	}
 }

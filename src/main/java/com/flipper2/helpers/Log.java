@@ -9,8 +9,10 @@ import lombok.extern.slf4j.Slf4j;
  * Now just acts as a way to log when in debug mode
  */
 @Slf4j
-public class Log {
-    public static void info(String message) {
-            log.debug("FLIPPER PLUGIN: " + message);
-    }
+public class Log
+{
+	public static void info(String message)
+	{
+		log.debug("FLIPPER PLUGIN: " + message);
+	}
 }
