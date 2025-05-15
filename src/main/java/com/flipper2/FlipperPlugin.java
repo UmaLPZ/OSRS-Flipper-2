@@ -83,7 +83,6 @@ public class FlipperPlugin extends Plugin
 
 	private NavigationButton navButton;
 	private TabManager tabManager;
-	@Inject
 	private InProgressPage inProgressPage;
 	@Inject
 	private Gson gson;
@@ -97,6 +96,7 @@ public class FlipperPlugin extends Plugin
 			Persistor.gson = this.gson;
 			this.tabManager = new TabManager();
 			this.setUpNavigationButton();
+			this.inProgressPage = new InProgressPage();
 			this.buysController = new BuysController(itemManager, config, cThread);
 			this.sellsController = new SellsController(itemManager, config, cThread);
 			this.flipsController = new FlipsController(itemManager, config, cThread);
