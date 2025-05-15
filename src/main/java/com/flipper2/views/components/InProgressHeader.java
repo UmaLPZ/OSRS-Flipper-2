@@ -53,7 +53,7 @@ public class InProgressHeader extends JPanel
 
 	private JLabel constructItemName(String itemName)
 	{
-		JLabel itemNameLabel = new JLabel(truncateString(itemName,20), SwingConstants.CENTER);
+		JLabel itemNameLabel = new JLabel(truncateString(itemName, 20), SwingConstants.CENTER);
 		itemNameLabel.setForeground(Color.WHITE);
 		itemNameLabel.setFont(FontManager.getRunescapeBoldFont());
 		itemNameLabel.setToolTipText(itemName);
@@ -74,7 +74,7 @@ public class InProgressHeader extends JPanel
 		}
 		else
 		{
-			offerTypeLabel.setForeground(ColorScheme.PROGRESS_ERROR_COLOR);
+			offerTypeLabel.setForeground(ColorScheme.GRAND_EXCHANGE_PRICE);
 		}
 		return offerTypeLabel;
 	}
