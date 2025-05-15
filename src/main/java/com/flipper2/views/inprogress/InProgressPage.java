@@ -37,22 +37,18 @@ public class InProgressPage extends JPanel
 
 	public void build()
 	{
+		JPanel scrollContainer = new JPanel();
+		scrollContainer.setLayout(new BorderLayout());
 		container = new JPanel();
-		container.setBorder(new EmptyBorder(5, 0, 0, 0));
+		container.setBorder(new EmptyBorder(2, 0, 0, 0));
 		container.setLayout(new BoxLayout(container, BoxLayout.PAGE_AXIS));
 		container.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-		JPanel scrollContainer = new JPanel();
-		scrollContainer.setLayout(new BorderLayout());
-		scrollContainer.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		scrollContainer.setBorder(new EmptyBorder(0, 0, 0, 0));
-		scrollContainer.add(container, BorderLayout.PAGE_START);
-
 		JScrollPane scrollPane = new JScrollPane(scrollContainer);
-		scrollPane.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
-		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		scrollPane.setBackground(ColorScheme.LIGHT_GRAY_COLOR);
+		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
+		scrollContainer.add(container, BorderLayout.PAGE_START);
 		this.add(scrollPane, BorderLayout.CENTER);
 	}
 

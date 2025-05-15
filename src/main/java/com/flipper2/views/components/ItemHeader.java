@@ -13,6 +13,7 @@ import java.awt.Dimension;
 
 import com.flipper2.helpers.Numbers;
 import com.flipper2.helpers.UiUtilities;
+
 import static com.flipper2.helpers.UiUtilities.truncateString;
 
 import net.runelite.client.game.ItemManager;
@@ -133,7 +134,7 @@ public class ItemHeader extends JPanel
 
 	private JLabel constructItemName()
 	{
-		JLabel itemName = new JLabel(truncateString(this.itemName,20), SwingConstants.CENTER);
+		JLabel itemName = new JLabel(truncateString(this.itemName, 20), SwingConstants.CENTER);
 		itemName.setForeground(Color.WHITE);
 		itemName.setFont(FontManager.getRunescapeBoldFont());
 		itemName.setPreferredSize(new Dimension(0, 0));

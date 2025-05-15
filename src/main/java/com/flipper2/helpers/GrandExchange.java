@@ -20,12 +20,24 @@ public class GrandExchange
 			state == GrandExchangeOfferState.BUYING;
 	}
 
+	public static boolean checkIsActive(GrandExchangeOfferState state)
+	{
+		return state == GrandExchangeOfferState.BUYING ||
+			state == GrandExchangeOfferState.SELLING;
+	}
+
 	public static boolean checkIsComplete(GrandExchangeOfferState state)
 	{
 		return state == GrandExchangeOfferState.BOUGHT ||
 			state == GrandExchangeOfferState.SOLD ||
 			state == GrandExchangeOfferState.CANCELLED_SELL ||
 			state == GrandExchangeOfferState.CANCELLED_BUY;
+	}
+
+	public static boolean checkIsBoughtSold(GrandExchangeOfferState state)
+	{
+		return state == GrandExchangeOfferState.BOUGHT ||
+			state == GrandExchangeOfferState.SOLD;
 	}
 
 	public static boolean checkIsCancelState(GrandExchangeOfferState state)
