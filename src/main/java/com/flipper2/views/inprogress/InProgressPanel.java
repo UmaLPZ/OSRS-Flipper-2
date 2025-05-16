@@ -218,7 +218,8 @@ public class InProgressPanel extends JPanel
 		int spent = offer.getSpent();
 		int price = offer.getPrice();
 
-		quantityProgressLabel.setText(Numbers.numberWithCommas(quantitySold) + " / " + Numbers.numberWithCommas(totalQuantity));
+		quantityProgressLabel.setText(Numbers.toShortNumber(quantitySold) + " / " + Numbers.toShortNumber(totalQuantity));
+		quantityProgressLabel.setToolTipText(Numbers.numberWithCommas(quantitySold) + " / " + Numbers.numberWithCommas(totalQuantity));
 
 		int percentage = totalQuantity > 0 ? (int) (((double) quantitySold / totalQuantity) * 100) : 0;
 		progressBar.setValue(percentage);

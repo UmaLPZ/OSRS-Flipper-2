@@ -238,12 +238,19 @@ public class TransactionPanel extends JPanel
 		}
 
 		JPanel initTotalPanel = new CustomPanel(new BorderLayout(), true);
-		int initTotalValue = transaction.getInitPricePer() * transaction.getQuantity();
-		String initTotalValueText = Numbers.toShortNumber(initTotalValue);
+		int initTotalValue;
+		if (!transaction.isBuy())
+		{
+			initTotalValue = transaction.getInitPricePer() * transaction.getQuantity() - calculateTax(transaction.getInitPricePer());
+		}
+		else
+		{
+			initTotalValue = transaction.getInitPricePer() * transaction.getQuantity();
 
+		}
+		String initTotalValueText = Numbers.toShortNumber(initTotalValue);
 		JLabel totalValueValueLabelInit = newRightLabel(initTotalValueText, ColorScheme.GRAND_EXCHANGE_ALCH);
 		totalValueValueLabelInit.setToolTipText(Numbers.numberWithCommas(initTotalValue));
-
 		initTotalPanel.add(totalValueValueLabelInit, BorderLayout.CENTER);
 		contentPanel1.add(initTotalPanel);
 
@@ -251,13 +258,11 @@ public class TransactionPanel extends JPanel
 
 		JPanel column2 = new JPanel(new BorderLayout());
 		column2.setBackground(ColorScheme.DARK_GRAY_COLOR);
-
 		JPanel contentPanel2 = new JPanel(new GridLayout(0, 1));
 		contentPanel2.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
 		JPanel finQuantityPanel = new CustomPanel(new BorderLayout(), true);
 		String quantityValueTextFin = Numbers.numberWithCommas(transaction.getQuantity());
-
 		JLabel quantityValueLabelFin = newRightLabel(quantityValueTextFin, ColorScheme.GRAND_EXCHANGE_ALCH);
 		finQuantityPanel.add(quantityValueLabelFin, BorderLayout.CENTER);
 		contentPanel2.add(finQuantityPanel);
@@ -282,7 +287,15 @@ public class TransactionPanel extends JPanel
 		}
 
 		JPanel finTotalPanel = new CustomPanel(new BorderLayout(), true);
-		int finTotalValue = transaction.getFinPricePer() * transaction.getQuantity();
+		int finTotalValue;
+		if (!transaction.isBuy())
+		{
+			finTotalValue = transaction.getFinPricePer() * transaction.getQuantity() - calculateTax(transaction.getFinPricePer());
+		}
+		else
+		{
+			finTotalValue = transaction.getFinPricePer() * transaction.getQuantity();
+		}
 		String finTotalValueText = Numbers.toShortNumber(finTotalValue);
 		JLabel totalValueValueLabelFin = newRightLabel(finTotalValueText, ColorScheme.GRAND_EXCHANGE_ALCH);
 		totalValueValueLabelFin.setToolTipText(Numbers.numberWithCommas(finTotalValue));
