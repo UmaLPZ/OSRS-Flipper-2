@@ -1,5 +1,6 @@
 package com.flipper2.views.flips;
 
+import java.awt.Dimension;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -88,8 +89,26 @@ public class FlipPanel extends JPanel
 
 		centerPanel.add(titlePanel, BorderLayout.NORTH);
 
+		JPanel colTitlePanel = new JPanel(new GridLayout(1, 3, 0, 0));
+		colTitlePanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
+
+		JLabel blankLabel = new JLabel("");
+		colTitlePanel.add(blankLabel);
+
+		JLabel initialLabel = new JLabel("Per");
+		initialLabel.setHorizontalAlignment(JLabel.CENTER);
+		initialLabel.setForeground(Color.white);
+		colTitlePanel.add(initialLabel);
+
+		JLabel finalLabel = new JLabel("Total");
+		finalLabel.setHorizontalAlignment(JLabel.CENTER);
+		finalLabel.setForeground(Color.white);
+		colTitlePanel.add(finalLabel);
+
+		centerPanel.add(colTitlePanel, BorderLayout.CENTER);
+
 		constructItemInfo();
-		centerPanel.add(itemInfoContainer, BorderLayout.CENTER);
+		centerPanel.add(itemInfoContainer, BorderLayout.SOUTH);
 
 		container.add(centerPanel, BorderLayout.CENTER);
 
@@ -119,7 +138,8 @@ public class FlipPanel extends JPanel
 	private JLabel newLeftLabel(String text)
 	{
 		JLabel newLeftJLabel = new JLabel(text);
-		newLeftJLabel.setForeground(ColorScheme.GRAND_EXCHANGE_PRICE);
+		newLeftJLabel.setVerticalAlignment(JLabel.CENTER);
+		newLeftJLabel.setForeground(Color.white);
 		newLeftJLabel.setBorder(new EmptyBorder(2, 2, 2, 2));
 		return newLeftJLabel;
 	}
@@ -127,7 +147,8 @@ public class FlipPanel extends JPanel
 	private JLabel newRightLabel(String value, Color fontColor)
 	{
 		JLabel newRightLabel = new JLabel(value);
-		newRightLabel.setHorizontalAlignment(JLabel.RIGHT);
+		newRightLabel.setHorizontalAlignment(JLabel.CENTER);
+		newRightLabel.setVerticalAlignment(JLabel.CENTER);
 		newRightLabel.setForeground(fontColor);
 		newRightLabel.setBorder(new EmptyBorder(2, 2, 2, 2));
 		return newRightLabel;
@@ -135,8 +156,36 @@ public class FlipPanel extends JPanel
 
 	private void constructItemInfo()
 	{
-		itemInfoContainer = new JPanel(new GridLayout(1, 2, 0, 0));
+		itemInfoContainer = new JPanel(new GridLayout(1, 3, 0, 0));
 		itemInfoContainer.setBackground(ColorScheme.DARK_GRAY_COLOR);
+
+		JPanel labelColumn = new JPanel(new BorderLayout());
+		labelColumn.setBackground(ColorScheme.DARK_GRAY_COLOR);
+
+		JPanel labelPanel = new JPanel(new GridLayout(0, 1));
+		labelPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
+
+		JPanel buyColPanel = new CustomPanel(new BorderLayout(), true);
+		JLabel buyColLabel = newLeftLabel("Buy Price:");
+		buyColPanel.add(buyColLabel, BorderLayout.WEST);
+		labelPanel.add(buyColPanel);
+
+		JPanel sellColPanel = new CustomPanel(new BorderLayout(), true);
+		JLabel sellColLabel = newLeftLabel("Sell Price:");
+		sellColPanel.add(sellColLabel, BorderLayout.WEST);
+		labelPanel.add(sellColPanel);
+
+		JPanel profitColPanel = new CustomPanel(new BorderLayout(), true);
+		JLabel profitColLabel = newLeftLabel("Profit:");
+		profitColPanel.add(profitColLabel, BorderLayout.WEST);
+		labelPanel.add(profitColPanel);
+
+		JPanel taxColPanel = new CustomPanel(new BorderLayout(), true);
+		JLabel taxColLabel = newLeftLabel("Tax:");
+		taxColPanel.add(taxColLabel, BorderLayout.WEST);
+		labelPanel.add(taxColPanel);
+
+		labelColumn.add(labelPanel, BorderLayout.CENTER);
 
 		JPanel column1 = new JPanel(new BorderLayout());
 		column1.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -144,37 +193,34 @@ public class FlipPanel extends JPanel
 		JPanel contentPanel1 = new JPanel(new GridLayout(0, 1));
 		contentPanel1.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-		JPanel buyPricePanel = new CustomPanel(new BorderLayout(), true);
-		int buyPrice = flip.getBuyPrice();
-		JLabel buyPriceLabel = newLeftLabel("Buy Price:");
-		buyPriceLabel.setForeground(Color.white);
-		JLabel buyPriceValue = newRightLabel(Numbers.toShortNumber(buyPrice), ColorScheme.GRAND_EXCHANGE_ALCH);
-		buyPriceValue.setToolTipText(Numbers.numberWithCommas(buyPrice));
-		buyPricePanel.add(buyPriceLabel, BorderLayout.WEST);
-		buyPricePanel.add(buyPriceValue, BorderLayout.EAST);
-		contentPanel1.add(buyPricePanel);
+		JPanel buyPerPricePanel = new CustomPanel(new BorderLayout(), true);
+		int buyPerPrice = flip.getBuyPrice();
+		JLabel buyPerPriceValue = newRightLabel(Numbers.toShortNumber(buyPerPrice), ColorScheme.GRAND_EXCHANGE_ALCH);
+		buyPerPriceValue.setToolTipText(Numbers.numberWithCommas(buyPerPrice));
+		buyPerPricePanel.add(buyPerPriceValue, BorderLayout.CENTER);
+		contentPanel1.add(buyPerPricePanel);
+
+		JPanel sellPerPricePanel = new CustomPanel(new BorderLayout(), true);
+		int SellPerPrice = flip.getSellPrice();
+		JLabel sellPerPriceValue = newRightLabel(Numbers.toShortNumber(SellPerPrice), ColorScheme.GRAND_EXCHANGE_ALCH);
+		sellPerPriceValue.setToolTipText(Numbers.numberWithCommas(SellPerPrice));
+		sellPerPricePanel.add(sellPerPriceValue, BorderLayout.CENTER);
+		contentPanel1.add(sellPerPricePanel);
 
 		JPanel profitPerPanel = new CustomPanel(new BorderLayout(), true);
-		int profitEach = flip.getSellPrice() - flip.getBuyPrice() - flip.getTax();
-		String profitEachText = Numbers.toShortNumber(profitEach);
-		Color profitEachColor = profitEach > 0 ? ColorScheme.GRAND_EXCHANGE_ALCH : ColorScheme.PROGRESS_ERROR_COLOR;
-		JLabel profitPerLabel = newLeftLabel("Profit Per:");
-		profitPerLabel.setForeground(Color.white);
-		JLabel profitPerValue = newRightLabel(profitEachText, profitEachColor);
-		profitPerValue.setToolTipText(Numbers.numberWithCommas(profitEach));
-		profitPerPanel.add(profitPerLabel, BorderLayout.WEST);
-		profitPerPanel.add(profitPerValue, BorderLayout.EAST);
+		int profitPer = flip.getSellPrice() - flip.getBuyPrice() - flip.getTax();
+		Color profitPerColor = profitPer > 0 ? ColorScheme.GRAND_EXCHANGE_ALCH : ColorScheme.PROGRESS_ERROR_COLOR;
+		JLabel profitPerValue = newRightLabel(Numbers.toShortNumber(profitPer), profitPerColor);
+		profitPerValue.setToolTipText(Numbers.numberWithCommas(profitPer));
+		profitPerPanel.add(profitPerValue, BorderLayout.CENTER);
 		contentPanel1.add(profitPerPanel);
 
 		JPanel taxPerPanel = new CustomPanel(new BorderLayout(), true);
 		int taxPer = flip.getTax();
 		String taxPerText = Numbers.toShortNumber(taxPer);
-		JLabel taxPerLabel = newLeftLabel("Tax Per:");
-		taxPerLabel.setForeground(Color.white);
 		JLabel taxPerValue = newRightLabel(taxPerText, ColorScheme.PROGRESS_ERROR_COLOR);
 		taxPerValue.setToolTipText(Numbers.numberWithCommas(taxPer));
-		taxPerPanel.add(taxPerLabel, BorderLayout.WEST);
-		taxPerPanel.add(taxPerValue, BorderLayout.EAST);
+		taxPerPanel.add(taxPerValue, BorderLayout.CENTER);
 		contentPanel1.add(taxPerPanel);
 
 		column1.add(contentPanel1, BorderLayout.CENTER);
@@ -185,45 +231,46 @@ public class FlipPanel extends JPanel
 		JPanel contentPanel2 = new JPanel(new GridLayout(0, 1));
 		contentPanel2.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-		JPanel sellPricePanel = new CustomPanel(new BorderLayout(), true);
-		sellPricePanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		int sellPrice = flip.getSellPrice();
-		String sellPriceText = Numbers.toShortNumber(sellPrice);
-		JLabel sellPriceLabel = newLeftLabel("Sell Price:");
-		sellPriceLabel.setForeground(Color.white);
-		JLabel sellPriceValue = newRightLabel(sellPriceText, ColorScheme.GRAND_EXCHANGE_ALCH);
-		sellPriceValue.setToolTipText(Numbers.numberWithCommas(sellPrice));
+		JPanel buyPricePanel = new CustomPanel(new BorderLayout(), true);
+		int buyPrice = flip.getTotalBuy();
+		JLabel buyPriceValue = newRightLabel(Numbers.toShortNumber(buyPrice), ColorScheme.GRAND_EXCHANGE_ALCH);
+		buyPriceValue.setToolTipText(Numbers.numberWithCommas(buyPrice));
+		buyPricePanel.add(buyPriceValue, BorderLayout.CENTER);
+		contentPanel2.add(buyPricePanel);
 
-		sellPricePanel.add(sellPriceLabel, BorderLayout.WEST);
-		sellPricePanel.add(sellPriceValue, BorderLayout.EAST);
+		JPanel sellPricePanel = new CustomPanel(new BorderLayout(), true);
+		int sellPrice = flip.getTotalSell();
+		JLabel sellPriceValue = newRightLabel(Numbers.toShortNumber(sellPrice), ColorScheme.GRAND_EXCHANGE_ALCH);
+		sellPriceValue.setToolTipText(Numbers.numberWithCommas(sellPrice));
+		sellPricePanel.add(sellPriceValue, BorderLayout.CENTER);
 		contentPanel2.add(sellPricePanel);
 
 		JPanel totalProfitPanel = new CustomPanel(new BorderLayout(), true);
 		int totalProfit = flip.getTotalProfit();
-		String totalProfitText = Numbers.toShortNumber(totalProfit);
 		Color profitColor = totalProfit > 0 ? ColorScheme.GRAND_EXCHANGE_ALCH : ColorScheme.PROGRESS_ERROR_COLOR;
-		JLabel totalProfitLabel = newLeftLabel("Total Profit:");
-		totalProfitLabel.setForeground(Color.white);
-		JLabel totalProfitValue = newRightLabel(totalProfitText, profitColor);
+		JLabel totalProfitValue = newRightLabel(Numbers.toShortNumber(totalProfit), profitColor);
 		totalProfitValue.setToolTipText(Numbers.numberWithCommas(totalProfit));
-		totalProfitPanel.add(totalProfitLabel, BorderLayout.WEST);
-		totalProfitPanel.add(totalProfitValue, BorderLayout.EAST);
+		totalProfitPanel.add(totalProfitValue, BorderLayout.CENTER);
 		contentPanel2.add(totalProfitPanel);
 
 		JPanel totalTaxPanel = new CustomPanel(new BorderLayout(), true);
 		int totalTax = flip.getTotalTax();
-		String totalTaxText = Numbers.toShortNumber(totalTax);
-		JLabel totalTaxLabel = newLeftLabel("Total Tax:");
-		totalTaxLabel.setForeground(Color.white);
-		JLabel totalTaxValue = newRightLabel(totalTaxText, ColorScheme.PROGRESS_ERROR_COLOR);
+		JLabel totalTaxValue = newRightLabel(Numbers.toShortNumber(totalTax), ColorScheme.PROGRESS_ERROR_COLOR);
 		totalTaxValue.setToolTipText(Numbers.numberWithCommas(totalTax));
-		totalTaxPanel.add(totalTaxLabel, BorderLayout.WEST);
-		totalTaxPanel.add(totalTaxValue, BorderLayout.EAST);
+		totalTaxPanel.add(totalTaxValue, BorderLayout.CENTER);
 		contentPanel2.add(totalTaxPanel);
 
 		column2.add(contentPanel2, BorderLayout.CENTER);
 
+		itemInfoContainer.add(labelColumn);
 		itemInfoContainer.add(column1);
 		itemInfoContainer.add(column2);
+	}
+
+	@Override
+	public Dimension getPreferredSize()
+	{
+		Dimension preferredSize = super.getPreferredSize();
+		return new Dimension(container.getPreferredSize().width, preferredSize.height);
 	}
 }

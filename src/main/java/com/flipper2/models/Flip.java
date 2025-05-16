@@ -63,10 +63,6 @@ public class Flip
 	 *
 	 * @return profit of flip
 	 */
-	public int getTotalProfit()
-	{
-		return (sellPrice - buyPrice) * quantity - getTotalTax();
-	}
 
 	/**
 	 * The GE floors tax per item.
@@ -87,5 +83,20 @@ public class Flip
 	public int getTotalTax()
 	{
 		return getTax() * quantity;
+	}
+
+	public int getTotalProfit()
+	{
+		return (sellPrice - buyPrice) * quantity - getTotalTax();
+	}
+
+	public int getTotalBuy()
+	{
+		return buyPrice * quantity;
+	}
+
+	public int getTotalSell()
+	{
+		return sellPrice * quantity;
 	}
 }
