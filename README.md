@@ -18,28 +18,51 @@ If you notice any bugs or have any suggestions please let me know by making an [
 Track Buys:
 
 <p>
-    <img src="https://i.imgur.com/Qr9MzrW.png" max-width="600px">
+    <img src="https://i.imgur.com/aGH7ugM.png" max-width="600px">
 </p>
 
 Track Sells:
 
 <p>
-    <img src="https://i.imgur.com/WHe5TjL.png" max-width="600px">
+    <img src="https://i.imgur.com/eFbO9Qa.png" max-width="600px">
 </p>
 
 Track Flips:
 
 <p>
-    <img src="https://i.imgur.com/NdT5GQz.png" max-width="600px">
+    <img src="https://i.imgur.com/RQb9OQb.png" max-width="600px">
 </p>
 
 View In-Progress Offers:
 
 <p>
-    <img src="https://i.imgur.com/G9PfDi9.png" max-width="600px">
+    <img src="https://i.imgur.com/TXW79Hl.png" max-width="600px">
 </p>
 
 ## Changelog
+
+v1.0.6 <br />
+- Changed Flip panel layout to 3 columns
+- Fixed Sell panel horizontal overflow
+- Fixed Sell panel showing incorrect value after tax
+
+v1.0.5 <br />
+- Switched to 3 separate columns instead of two for buy/sell/in progress tabs
+- Changed formatting for a lot of labels and values
+- Changed progress bars
+- Renamed some things
+- Added bottom line border
+
+v1.0.4 <br />
+- truncated item names if they are longer than 20 characters
+- used different colors for the progress bar
+- changed coding format
+
+v1.0.3 <br />
+- Fixed In Progress panel overflowing causing horizontal scroll
+- Shortened "Received" to "Rcvd" to prevent overflow
+- Changed text to "Spent/Per" and "Rcvd/Per"
+- Changed "Total Value" to "Offer Value"
 
 v1.0.2 <br />
 - Fixed In Progress Panel displaying the wrong offer type
