@@ -75,7 +75,6 @@ public class Transaction
 		{
 			this.finPricePer = 0;
 		}
-
 		boolean isCancelState = GrandExchange.checkIsCancelState(offer.getState());
 
 		if (!isCancelState || (this.hasCancelledOnce && isCancelState))
@@ -104,7 +103,6 @@ public class Transaction
 	{
 		this.isFlipped = isFlipped;
 	}
-
 
 	public int getTax()
 	{
