@@ -1,19 +1,19 @@
 package com.flipper2.views.inprogress;
 
 import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.time.Instant;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
-
+import com.flipper2.helpers.Timestamps;
 import com.flipper2.helpers.Numbers;
 import com.flipper2.helpers.UiUtilities;
 import com.flipper2.helpers.CustomPanel;
 import com.flipper2.views.components.InProgressHeader;
-
 import net.runelite.api.GrandExchangeOffer;
 import net.runelite.api.GrandExchangeOfferState;
 import net.runelite.client.ui.ColorScheme;
@@ -28,8 +28,10 @@ public class InProgressPanel extends JPanel
 {
 	private JPanel container;
 	private JPanel itemInfoContainer;
+	private JPanel offerStatusPanel;
 	private JLabel quantityProgressLabel;
 	private JProgressBar progressBar;
+	private JLabel lastUpdate;
 
 	public InProgressPanel(ItemComposition item, BufferedImage itemImage, GrandExchangeOffer offer)
 	{
@@ -49,6 +51,10 @@ public class InProgressPanel extends JPanel
 		progressBar.setForeground(ColorScheme.PROGRESS_INPROGRESS_COLOR);
 		progressBar.setStringPainted(true);
 
+		lastUpdate = new JLabel("---");
+		lastUpdate.setForeground(ColorScheme.GRAND_EXCHANGE_ALCH);
+		lastUpdate.setBorder(new EmptyBorder(1, 0, 1, 0));
+
 		constructItemInfo();
 
 		container.setBorder(UiUtilities.ITEM_INFO_BORDER);
@@ -59,7 +65,6 @@ public class InProgressPanel extends JPanel
 	private JLabel newLeftLabel(String text)
 	{
 		JLabel newLeftJLabel = new JLabel(text);
-		newLeftJLabel.setVerticalAlignment(JLabel.CENTER);
 		newLeftJLabel.setVerticalAlignment(JLabel.CENTER);
 		newLeftJLabel.setForeground(Color.white);
 		newLeftJLabel.setBorder(new EmptyBorder(4, 2, 3, 2));
@@ -133,6 +138,29 @@ public class InProgressPanel extends JPanel
 		itemInfoContainer.add(column1);
 		itemInfoContainer.add(column2);
 		itemInfoContainer.add(column3);
+
+		offerStatusPanel = new JPanel(new BorderLayout());
+		offerStatusPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
+
+		JPanel datePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+		datePanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		datePanel.setForeground(ColorScheme.GRAND_EXCHANGE_PRICE);
+
+		String dateText = ("Last Update: ");
+		JLabel dateLabel = new JLabel(dateText);
+
+		datePanel.setOpaque(false);
+		datePanel.add(dateLabel);
+		datePanel.add(lastUpdate);
+
+		JPanel bottomPanel = new JPanel(new BorderLayout());
+		bottomPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		bottomPanel.add(quantityProgressLabel, BorderLayout.NORTH);
+		bottomPanel.add(progressBar, BorderLayout.CENTER);
+		bottomPanel.add(datePanel, BorderLayout.SOUTH);
+
+		offerStatusPanel.add(bottomPanel);
+
 	}
 
 	public void updateOffer(ItemComposition offerItem, BufferedImage itemImage, GrandExchangeOffer offer)
@@ -202,13 +230,9 @@ public class InProgressPanel extends JPanel
 		centerPanel.add(titlePanel, BorderLayout.NORTH);
 		constructItemInfo();
 		centerPanel.add(itemInfoContainer, BorderLayout.CENTER);
-		container.add(centerPanel, BorderLayout.CENTER);
 
-		JPanel bottomPanel = new JPanel(new BorderLayout());
-		bottomPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		bottomPanel.add(quantityProgressLabel, BorderLayout.NORTH);
-		bottomPanel.add(progressBar, BorderLayout.SOUTH);
-		container.add(bottomPanel, BorderLayout.SOUTH);
+		container.add(centerPanel, BorderLayout.CENTER);
+		container.add(offerStatusPanel, BorderLayout.SOUTH);
 
 		int quantitySold = offer.getQuantitySold();
 		int totalQuantity = offer.getTotalQuantity();
@@ -238,6 +262,9 @@ public class InProgressPanel extends JPanel
 			progressBar.setForeground(ColorScheme.PROGRESS_ERROR_COLOR);
 		}
 
+		String dateString = Timestamps.format(Instant.now());
+		lastUpdate.setText(dateString);
+
 		JPanel contentPanel1 = (JPanel) ((JPanel) itemInfoContainer.getComponent(1)).getComponent(0);
 		JPanel contentPanel2 = (JPanel) ((JPanel) itemInfoContainer.getComponent(2)).getComponent(0);
 
@@ -254,8 +281,8 @@ public class InProgressPanel extends JPanel
 		spentValue.setText(Numbers.toShortNumber(spent));
 		spentValue.setToolTipText(Numbers.numberWithCommas(spent));
 
-		int spentPer = (quantitySold > 0) ? spent / quantitySold : 0;
 		JLabel spentPerValue = (JLabel) ((JPanel) contentPanel2.getComponent(1)).getComponent(0);
+		int spentPer = (quantitySold > 0) ? spent / quantitySold : 0;
 		spentPerValue.setText(Numbers.toShortNumber(spentPer));
 		spentPerValue.setToolTipText(Numbers.numberWithCommas(spentPer));
 

@@ -107,12 +107,10 @@ public class TransactionController
 			}
 		}
 
-
 		Transaction newTransaction = GrandExchange.createTransactionFromOffer(offer, itemManager, slot);
 		this.addTransaction(newTransaction);
 		return newTransaction;
 	}
-
 
 	public void removeTransaction(UUID id)
 	{
@@ -133,8 +131,6 @@ public class TransactionController
 	{
 	}
 
-	;
-
 	public JButton renderExtraComponent()
 	{
 		return null;
@@ -144,13 +140,11 @@ public class TransactionController
 	{
 	}
 
-	;
 
 	public void saveTransactions()
 	{
 	}
 
-	;
 
 	public TransactionPage getPage()
 	{
