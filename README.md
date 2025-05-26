@@ -41,9 +41,6 @@ View In-Progress Offers:
 
 ## Changelog
 
-v1.0.7 <br />
-- Bug fixes
-
 v1.0.6 <br />
 - Changed Flip panel layout to 3 columns
 - Fixed Sell panel horizontal overflow
