@@ -41,6 +41,19 @@ View In-Progress Offers:
 
 ## Changelog
 
+v1.0.7b <br />
+- added config options for progress panel time stamps
+- added subscriber for RL config changes
+- restructured how buy/sell and in progress panels are created and updated (no visual changes)
+- added enum file for timestamp formats
+- updated tax calculation to use new tax rate
+  - buys/sells made and completed before update day will use old tax rate
+- removed unused tax calculation method in Transaction file
+- maybe some bug fixes
+
+v1.0.7 <br />
+- Some bug fixes
+
 v1.0.6 <br />
 - Changed Flip panel layout to 3 columns
 - Fixed Sell panel horizontal overflow

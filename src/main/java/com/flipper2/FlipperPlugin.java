@@ -50,6 +50,7 @@ import net.runelite.api.GrandExchangeOfferState;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GrandExchangeOfferChanged;
 import net.runelite.client.callback.ClientThread;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ClientShutdown;
@@ -96,7 +97,7 @@ public class FlipperPlugin extends Plugin
 			Persistor.gson = this.gson;
 			this.tabManager = new TabManager();
 			this.setUpNavigationButton();
-			this.inProgressPage = new InProgressPage();
+			this.inProgressPage = new InProgressPage(this.config);
 			this.buysController = new BuysController(itemManager, config, cThread);
 			this.sellsController = new SellsController(itemManager, config, cThread);
 			this.flipsController = new FlipsController(itemManager, config, cThread);
@@ -223,6 +224,27 @@ public class FlipperPlugin extends Plugin
 		if (gameStateChanged.getGameState() == GameState.LOGIN_SCREEN)
 		{
 			inProgressPage.resetOffers();
+		}
+	}
+	@Subscribe
+	public void onConfigChanged(ConfigChanged event) {
+//		Log.info("this is start of config change");
+		// Check if the configuration change is for your plugin's group
+		if (event.getGroup().equals("Flipper2")) {
+//			Log.info("this is if it's the event group");
+			// Check if the key changed is one of the ones affecting timestamp display
+			String key = event.getKey();
+			if (key.equals("isLastUpdate") || key.equals("inProgressTimestampFormat")) {
+//				Log.info("this is checking for isLastUpdate");
+				if (this.inProgressPage != null) {
+					// Use SwingUtilities to ensure UI updates happen on the EDT
+					SwingUtilities.invokeLater(() -> {
+						this.inProgressPage.notifyPanelsOfConfigChange();
+//						Log.info("this is on config change");
+					});
+				}
+			}
+			// You might have other config keys to check here for other features
 		}
 	}
 

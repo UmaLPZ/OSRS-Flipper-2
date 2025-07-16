@@ -15,7 +15,8 @@ import com.flipper2.helpers.GrandExchange;
 @Data
 public class Transaction
 {
-	public static final double TAX_RATE = 0.01;
+	public static final double TAX_RATE = 0.02;
+	public static final double OLD_TAX_RATE = 0.01;
 	public static final int MAX_TAX = 5000000;
 
 	public final UUID id;
@@ -102,21 +103,5 @@ public class Transaction
 	public void setIsFlipped(boolean isFlipped)
 	{
 		this.isFlipped = isFlipped;
-	}
-
-	public int getTax()
-	{
-		if (this.isBuy)
-		{
-			return 0;
-		}
-
-		int tax = (int) Math.floor(this.finPricePer * TAX_RATE);
-		return Math.min(tax, MAX_TAX);
-	}
-
-	public int getTotalTax()
-	{
-		return getTax() * this.quantity;
 	}
 }

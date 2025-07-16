@@ -1,5 +1,7 @@
 package com.flipper2.views.inprogress;
 
+import com.flipper2.FlipperConfig;
+import com.flipper2.helpers.Log;
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -19,9 +21,12 @@ public class InProgressPage extends JPanel
 	private JPanel container;
 	private static final int MAX_OFFERS = 8;
 	private InProgressPanel[] inProgressPanels = new InProgressPanel[MAX_OFFERS];
+	private final FlipperConfig config;
 
-	public InProgressPage()
+
+	public InProgressPage(FlipperConfig config)
 	{
+		this.config = config;
 		this.setLayout(new BorderLayout());
 		this.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		this.build();
@@ -70,7 +75,7 @@ public class InProgressPage extends JPanel
 		InProgressPanel offerSlot = inProgressPanels[slot];
 		if (offerSlot == null)
 		{
-			offerSlot = new InProgressPanel(item, itemImage, newOffer);
+			offerSlot = new InProgressPanel(item, itemImage, newOffer, config);
 			inProgressPanels[slot] = offerSlot;
 			container.add(offerSlot);
 		}
@@ -79,5 +84,25 @@ public class InProgressPage extends JPanel
 
 		revalidate();
 		repaint();
+	}
+	public void notifyPanelsOfConfigChange() {
+		if (inProgressPanels == null) return; // Safety check
+
+		boolean needsRepaint = false;
+		for (InProgressPanel panel : inProgressPanels) {
+			if (panel != null) { // Only act on existing, non-null panels
+				panel.refreshTimestampDisplayBasedOnConfig();
+				needsRepaint = true; // Assume panel handles its own repaint, but page might need if size changes
+			}
+		}
+		// If any panel's structure might have changed (e.g. datePanel added/removed),
+		// the InProgressPage might need to revalidate its layout if panel sizes changed.
+		// Individual panels call their own revalidate/repaint, which is usually enough.
+		// If panel preferred sizes change significantly, this page might need revalidation.
+		if (needsRepaint) { // This check is a bit redundant if panels repaint themselves.
+//			this.revalidate(); // Usually not needed if children handle it.
+//			this.repaint();  // Usually not needed if children handle it.
+			Log.info("went through");
+		}
 	}
 }

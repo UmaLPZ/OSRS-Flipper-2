@@ -5,7 +5,7 @@ import java.text.NumberFormat;
 
 public class Numbers
 {
-	public static String numberWithCommas(int number)
+	public static String numberWithCommas(long number)
 	{
 		return NumberFormat.getIntegerInstance().format(number);
 	}
@@ -29,7 +29,7 @@ public class Numbers
 	 * @param number The number to shorten.
 	 * @return The shortened number string.
 	 */
-	public static String toShortNumber(int number)
+	public static String toShortNumber(long number)
 	{
 		if (number > -100000 && number < 100000)
 		{
@@ -62,9 +62,9 @@ public class Numbers
 
 		shortNumber = Math.round(shortNumber * 10.0) / 10.0;
 
-		if (shortNumber == (int) shortNumber)
+		if (shortNumber == (long) shortNumber)
 		{
-			return String.format("%s%d%s", sign, (int) shortNumber, suffix);
+			return String.format("%s%d%s", sign, (long) shortNumber, suffix);
 		}
 		else
 		{
