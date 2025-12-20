@@ -7,15 +7,13 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
-import com.flipper2.helpers.TimestampFormatEnums;
-
 public class Timestamps
 {
-	private static final DateTimeFormatter SIMPLE_DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("d MMM h:mm a");
-
+	private static final DateTimeFormatter SIMPLE_DATE_TIME_FORMAT_12 = DateTimeFormatter.ofPattern("d MMM h:mm a");
 	// Formats for the new configurable options
-	private static final DateTimeFormatter COMPACT_DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("dd MMM HH:mm");
-	private static final DateTimeFormatter TIME_ONLY_FORMAT = DateTimeFormatter.ofPattern("HH:mm:ss");
+	private static final DateTimeFormatter SIMPLE_DATE_TIME_FORMAT_24 = DateTimeFormatter.ofPattern("d MMM HH:mm");
+	private static final DateTimeFormatter TIME_ONLY_FORMAT_12 = DateTimeFormatter.ofPattern("h:mm a");
+	private static final DateTimeFormatter TIME_ONLY_FORMAT_24 = DateTimeFormatter.ofPattern("HH:mm");
 	public static String format(Timestamp timestamp) //for flip panel
 	{
 		LocalDateTime localDateTime = timestamp.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
@@ -41,12 +39,14 @@ public class Timestamps
 		LocalDateTime ldt = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
 
 		switch (formatEnum) {
-			case SIMPLE_DATE_TIME:
-				return ldt.format(SIMPLE_DATE_TIME_FORMAT);
-			case COMPACT_DATE_TIME:
-				return ldt.format(COMPACT_DATE_TIME_FORMAT);
-			case TIME_ONLY:
-				return ldt.format(TIME_ONLY_FORMAT);
+			case SIMPLE_DATE_TIME_12:
+				return ldt.format(SIMPLE_DATE_TIME_FORMAT_12);
+			case SIMPLE_DATE_TIME_24:
+				return ldt.format(SIMPLE_DATE_TIME_FORMAT_24);
+			case TIME_ONLY_12:
+				return ldt.format(TIME_ONLY_FORMAT_12);
+			case TIME_ONLY_24:
+				return ldt.format(TIME_ONLY_FORMAT_24);
 			case RELATIVE:
 			default:
 				long diffSeconds = ChronoUnit.SECONDS.between(instant, Instant.now());

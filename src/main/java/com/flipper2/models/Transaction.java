@@ -95,6 +95,21 @@ public class Transaction
 		return this;
 	}
 
+	public int calculateTax(int pricePer)
+	{
+		if (this.getItemId() == 13190)
+		{
+			return 0;
+		}
+
+		double applicableRate = this.getCreatedTime().getEpochSecond() <= 1748514600
+			? Transaction.TAX_RATE
+			: Transaction.OLD_TAX_RATE;
+
+		int tax = (int) Math.floor(pricePer * applicableRate);
+		return Math.min(tax, Transaction.MAX_TAX);
+	}
+
 	public String describeTransaction()
 	{
 		return String.valueOf(this.quantity) + " " + this.itemName + "(s)";

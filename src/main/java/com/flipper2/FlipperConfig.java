@@ -10,10 +10,19 @@ import net.runelite.client.config.ConfigSection;
 @ConfigGroup("Flipper2")
 public interface FlipperConfig extends Config
 {
+	@ConfigSection(
+		name = "Delete Confirmation Prompts",
+		description = "Show or skip the prompt before deleting an item. Deleted buys/sells/flip cannot be recovered. Recommended to keep these enabled",
+		position = 1
+	)
+	String deletepromptSection = "deletepromptSection";
+
 	@ConfigItem(
 		keyName = "isPromptDeleteBuy",
-		name = "Delete Buy Prompt",
-		description = "Shows confirmation prompt before deleting buy"
+		name = "Show Delete Buy Prompt",
+		description = "Shows confirmation prompt before deleting buy",
+		position = 1,
+		section = deletepromptSection
 	)
 	default boolean isPromptDeleteBuy()
 	{
@@ -22,19 +31,22 @@ public interface FlipperConfig extends Config
 
 	@ConfigItem(
 		keyName = "isPromptDeleteSell",
-		name = "Delete Sell Prompt",
-		description = "Shows confirmation prompt before deleting sell"
+		name = "Show Delete Sell Prompt",
+		description = "Shows confirmation prompt before deleting sell",
+		position = 2,
+		section = deletepromptSection
 	)
 	default boolean isPromptDeleteSell()
 	{
 		return true;
 	}
 
-
 	@ConfigItem(
 		keyName = "isPromptDeleteFlip",
-		name = "Delete Flip Prompt",
-		description = "Shows confirmation prompt before deleting flip"
+		name = "Show Delete Flip Prompt",
+		description = "Shows confirmation prompt before deleting flip",
+		position = 3,
+		section = deletepromptSection
 	)
 	default boolean isPromptDeleteFlip()
 	{
@@ -44,7 +56,7 @@ public interface FlipperConfig extends Config
 	@ConfigSection(
 		name = "In-Progress Panel Timestamps",
 		description = "Settings for the timestamp display on in-progress offer panels",
-		position = 10
+		position = 2
 	)
 	String timestampSection = "timestampSection";
 
@@ -61,15 +73,14 @@ public interface FlipperConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "inProgressTimestampFormat", // YOUR SPECIFIED KEY NAME
+		keyName = "inProgressTimestampFormat",
 		name = "Timestamp Format",
 		description = "Choose the format for the last update timestamp.",
 		position = 2,
 		section = timestampSection
 	)
-	default TimestampFormatEnums inProgressTimestampFormat() { // YOUR SPECIFIED METHOD NAME, returns TimestampFormatEnums
-		return TimestampFormatEnums.SIMPLE_DATE_TIME; // Default format
+	default TimestampFormatEnums inProgressTimestampFormat()
+	{
+		return TimestampFormatEnums.SIMPLE_DATE_TIME_12;
 	}
-
-
 }

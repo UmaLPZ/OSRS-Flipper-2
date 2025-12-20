@@ -116,7 +116,6 @@ public class Persistor
 			return false;
 		}
 	}
-
 	public static List<Transaction> loadBuys() throws IOException
 	{
 		String jsonString = getFileContent(BUYS_JSON_FILE);
@@ -130,21 +129,6 @@ public class Persistor
 		}
 		return buys;
 	}
-
-	public static List<Transaction> loadSells() throws IOException
-	{
-		String jsonString = getFileContent(SELLS_JSON_FILE);
-		Type type = new TypeToken<List<Transaction>>()
-		{
-		}.getType();
-		List<Transaction> sells = gson.fromJson(jsonString, type);
-		if (sells == null)
-		{
-			return new ArrayList<Transaction>();
-		}
-		return sells;
-	}
-
 	public static boolean saveFlips(List<Flip> flips)
 	{
 		try
@@ -158,7 +142,19 @@ public class Persistor
 			return false;
 		}
 	}
-
+	public static List<Transaction> loadSells() throws IOException
+	{
+		String jsonString = getFileContent(SELLS_JSON_FILE);
+		Type type = new TypeToken<List<Transaction>>()
+		{
+		}.getType();
+		List<Transaction> sells = gson.fromJson(jsonString, type);
+		if (sells == null)
+		{
+			return new ArrayList<Transaction>();
+		}
+		return sells;
+	}
 	public static List<Flip> loadFlips() throws IOException
 	{
 		String jsonString = getFileContent(FLIPS_JSON_FILE);

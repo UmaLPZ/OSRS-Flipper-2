@@ -25,10 +25,6 @@ public class Flip
 	private Timestamp updatedAt;
 	private Timestamp createdAt;
 
-	public Flip()
-	{
-	}
-
 	public Flip(Transaction buy, Transaction sell)
 	{
 		this.flipId = UUID.randomUUID();
@@ -57,12 +53,6 @@ public class Flip
 	{
 		return String.valueOf(quantity) + " " + this.itemName + "(s)";
 	}
-
-	/**
-	 * We only concern ourselves with the amount sold (ignore extra bought and kept)
-	 *
-	 * @return profit of flip
-	 */
 
 	/**
 	 * The GE floors tax per item.
