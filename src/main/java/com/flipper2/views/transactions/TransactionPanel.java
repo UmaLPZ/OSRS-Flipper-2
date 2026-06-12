@@ -157,11 +157,6 @@ public class TransactionPanel extends JPanel
 		return newRightLabel;
 	}
 
-	private int calculateTax(int pricePer)
-	{
-		int tax = (int) Math.floor(pricePer * Transaction.TAX_RATE);
-		return Math.min(tax, Transaction.MAX_TAX);
-	}
 
 	private void constructItemInfo()
 	{
@@ -227,7 +222,7 @@ public class TransactionPanel extends JPanel
 		if (!transaction.isBuy())
 		{
 			JPanel taxPanel = new CustomPanel(new BorderLayout(), true);
-			int initialTax = calculateTax(transaction.getInitPricePer());
+			int initialTax = transaction.calculateTax(transaction.getInitPricePer());
 			String initialTaxText = Numbers.toShortNumber(initialTax);
 
 			JLabel taxValueLabel = newRightLabel(initialTaxText, ColorScheme.PROGRESS_ERROR_COLOR);
@@ -241,7 +236,7 @@ public class TransactionPanel extends JPanel
 		int initTotalValue;
 		if (!transaction.isBuy())
 		{
-			initTotalValue = transaction.getInitPricePer() * transaction.getQuantity() - calculateTax(transaction.getInitPricePer());
+			initTotalValue = (transaction.getInitPricePer() * transaction.getQuantity()) - (transaction.calculateTax(transaction.getInitPricePer()) * transaction.getQuantity());
 		}
 		else
 		{
@@ -278,7 +273,7 @@ public class TransactionPanel extends JPanel
 		if (!transaction.isBuy())
 		{
 			JPanel taxPanel = new CustomPanel(new BorderLayout(), true);
-			int finalTax = calculateTax(transaction.getFinPricePer());
+			int finalTax = transaction.calculateTax(transaction.getFinPricePer());
 			String finalTaxText = Numbers.toShortNumber(finalTax);
 			JLabel taxValueLabel = newRightLabel(finalTaxText, ColorScheme.PROGRESS_ERROR_COLOR);
 			taxValueLabel.setToolTipText(Numbers.numberWithCommas(finalTax));
@@ -290,7 +285,7 @@ public class TransactionPanel extends JPanel
 		int finTotalValue;
 		if (!transaction.isBuy())
 		{
-			finTotalValue = transaction.getFinPricePer() * transaction.getQuantity() - calculateTax(transaction.getFinPricePer());
+			finTotalValue = (transaction.getFinPricePer() * transaction.getQuantity()) - (transaction.calculateTax(transaction.getFinPricePer()) * transaction.getQuantity());
 		}
 		else
 		{
