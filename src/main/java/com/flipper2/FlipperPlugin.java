@@ -100,6 +100,16 @@ public class FlipperPlugin extends Plugin
 			this.buysController = new BuysController(itemManager, config, cThread);
 			this.sellsController = new SellsController(itemManager, config, cThread);
 			this.flipsController = new FlipsController(itemManager, config, cThread);
+
+
+			this.flipsController.setRefreshFlipsRunnable(() -> {
+				this.flipsController.repairFlips(
+					buysController.getTransactions(),
+					sellsController.getTransactions()
+				);
+				buysController.saveTransactions();
+				sellsController.saveTransactions();
+			});
 			this.changeToLoggedInView();
 
 		}
@@ -185,8 +195,6 @@ public class FlipperPlugin extends Plugin
 				if (buy != null)
 				{
 					buysController.saveTransactions();
-					List<Transaction> sells = sellsController.getTransactions();
-					flipsController.upsertFlip(buy, sells);
 				}
 			}
 		}

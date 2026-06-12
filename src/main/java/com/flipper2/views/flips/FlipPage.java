@@ -36,13 +36,11 @@ public class FlipPage extends JPanel
 	private Toggle trackFlipsToggle;
 
 	public FlipPage(
-		Runnable refreshFlipsRunnable,
 		Consumer<String> onSearchTextChanged,
 		Runnable toggleIsTrackingFlipsRunnable,
 		Boolean isTrackingFlips
 	)
 	{
-		this.refreshFlipsRunnable = refreshFlipsRunnable;
 		this.onSearchTextChanged = onSearchTextChanged;
 		this.toggleIsTrackingFlipsRunnable = toggleIsTrackingFlipsRunnable;
 		this.setLayout(new BorderLayout());
@@ -51,7 +49,9 @@ public class FlipPage extends JPanel
 		this.build(isTrackingFlips);
 		setTotalProfit("0", true);
 	}
-
+	public void setRefreshFlipsRunnable(Runnable runnable) {
+		this.refreshFlipsRunnable = runnable;
+	}
 	public void addFlipPanel(FlipPanel flipPanel)
 	{
 		container.add(flipPanel, BorderLayout.CENTER);
@@ -93,7 +93,18 @@ public class FlipPage extends JPanel
 			{
 				try
 				{
-					refreshFlipsRunnable.run();
+					boolean isPrompt = true;
+					int input = isPrompt
+						? JOptionPane.showConfirmDialog(
+						null,
+						"Are you sure you want to reset/repair your flips? Any deleted buys/sells will not be included in the reset/repaired data"
+					)
+						: 0;
+					if (input == 0)
+					{
+						refreshFlipsRunnable.run();
+						setVisible(false);
+					}
 				}
 				catch (Exception error)
 				{

@@ -57,7 +57,6 @@ public class FlipsController
 
 
 		this.flipPage = new FlipPage(
-			refreshFlipsRunnable,
 			this.onSearchTextChangedCallback,
 			this::toggleIsTrackingFlips,
 			this.isTrackingFlips
@@ -210,6 +209,10 @@ public class FlipsController
 	 */
 	public Flip upsertFlip(Transaction sell, List<Transaction> buys)
 	{
+		if (sell.isBuy())
+		{
+			return null;
+		}
 		ListIterator<Transaction> buysIterator = buys.listIterator(buys.size());
 
 
@@ -242,6 +245,11 @@ public class FlipsController
 				while (buysIterator.hasPrevious())
 				{
 					Transaction buy = buysIterator.previous();
+					if (!buy.isBuy() || buy.getId().equals(sell.getId()))
+					{
+						continue;
+					}
+
 					if (GrandExchange.checkIsSellAFlipOfBuy(sell, buy))
 					{
 						Flip flip = new Flip(buy, sell);
@@ -295,6 +303,48 @@ public class FlipsController
 			this.flipPage.revalidate();
 			this.flipPage.repaint();
 		});
+	}
+
+	public void setRefreshFlipsRunnable(Runnable runnable) {
+		this.refreshFlipsRunnable = runnable;
+		this.flipPage.setRefreshFlipsRunnable(runnable);
+	}
+
+	public void repairFlips(List<Transaction> allBuys, List<Transaction> allSells)
+	{
+		this.flips.clear();
+		for (Transaction b : allBuys) b.setIsFlipped(false);
+		for (Transaction s : allSells) s.setIsFlipped(false);
+
+		allSells.sort((a, b) -> a.getCreatedTime().compareTo(b.getCreatedTime()));
+
+		for (Transaction sell : allSells)
+		{
+			if (sell.isBuy()) continue;
+
+			for (int i = allBuys.size() - 1; i >= 0; i--)
+			{
+				Transaction buy = allBuys.get(i);
+
+				if (buy.isBuy() && !buy.isFlipped() && !buy.getId().equals(sell.getId()))
+				{
+					if (GrandExchange.checkIsSellAFlipOfBuy(sell, buy))
+					{
+						Flip flip = new Flip(buy, sell);
+						if (!flip.isMarginCheck())
+						{
+							this.flips.add(0, flip);
+							buy.setIsFlipped(true);
+							sell.setIsFlipped(true);
+							break;
+						}
+					}
+				}
+			}
+		}
+		this.totalProfit = calculateTotalProfit(this.flips);
+		Persistor.saveFlips(this.flips);
+		getFlipNamesAndBuild();
 	}
 
 	public void saveTransactions()
