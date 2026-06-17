@@ -174,6 +174,7 @@ public class FlipsController
 		flip.setQuantity(sell.getQuantity());
 		flip.setItemId(sell.getItemId());
 		flip.setItemName(sell.getItemName());
+		flip.setTax(sell.getTax());
 		this.totalProfit = calculateTotalProfit(flips);
 		Persistor.saveFlips(this.flips);
 		getFlipNamesAndBuild();
@@ -305,7 +306,8 @@ public class FlipsController
 		});
 	}
 
-	public void setRefreshFlipsRunnable(Runnable runnable) {
+	public void setRefreshFlipsRunnable(Runnable runnable)
+	{
 		this.refreshFlipsRunnable = runnable;
 		this.flipPage.setRefreshFlipsRunnable(runnable);
 	}
@@ -313,14 +315,23 @@ public class FlipsController
 	public void repairFlips(List<Transaction> allBuys, List<Transaction> allSells)
 	{
 		this.flips.clear();
-		for (Transaction b : allBuys) b.setIsFlipped(false);
-		for (Transaction s : allSells) s.setIsFlipped(false);
+		for (Transaction b : allBuys)
+		{
+			b.setIsFlipped(false);
+		}
+		for (Transaction s : allSells)
+		{
+			s.setIsFlipped(false);
+		}
 
 		allSells.sort((a, b) -> a.getCreatedTime().compareTo(b.getCreatedTime()));
 
 		for (Transaction sell : allSells)
 		{
-			if (sell.isBuy()) continue;
+			if (sell.isBuy())
+			{
+				continue;
+			}
 
 			for (int i = allBuys.size() - 1; i >= 0; i--)
 			{

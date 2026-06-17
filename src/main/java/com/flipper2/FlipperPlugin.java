@@ -111,6 +111,7 @@ public class FlipperPlugin extends Plugin
 				sellsController.saveTransactions();
 			});
 			this.changeToLoggedInView();
+			this.saveAll();
 
 		}
 		catch (Exception e)
