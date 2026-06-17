@@ -15,10 +15,6 @@ import com.flipper2.helpers.GrandExchange;
 @Data
 public class Transaction
 {
-	public static final double TAX_RATE = 0.02;
-	public static final double OLD_TAX_RATE = 0.01;
-	public static final int MAX_TAX = 5000000;
-
 	public final UUID id;
 	private int quantity;
 	private int totalQuantity;
@@ -30,7 +26,7 @@ public class Transaction
 	private boolean isBuy;
 	private boolean isComplete;
 	private boolean isFlipped;
-	private boolean isAlched;
+	private int tax;
 	private Instant completedTime;
 	private Instant createdTime;
 	private boolean hasCancelledOnce = false;
@@ -61,6 +57,7 @@ public class Transaction
 		this.createdTime = Instant.now();
 		this.isFlipped = false;
 		this.hasCancelledOnce = false;
+		this.tax = 0;
 	}
 
 	public Transaction updateTransaction(GrandExchangeOffer offer)
@@ -75,6 +72,11 @@ public class Transaction
 		else
 		{
 			this.finPricePer = 0;
+		}
+
+		if (!this.isBuy)
+		{
+			this.tax = GrandExchange.calculateTotalTax(this.itemId, this.finPricePer, this.quantity, this.createdTime);
 		}
 
 		boolean isCancelState = GrandExchange.checkIsCancelState(offer.getState());
@@ -108,15 +110,6 @@ public class Transaction
 
 	public int calculateTax(int pricePer)
 	{
-		if (this.getItemId() == 13190)
-		{
-			return 0;
-		}
-		double applicableRate = this.getCreatedTime().getEpochSecond() <= 1748514600
-			? Transaction.TAX_RATE
-			: Transaction.OLD_TAX_RATE;
-		int tax = (int) Math.floor(pricePer * applicableRate);
-		return Math.min(tax, Transaction.MAX_TAX);
+		return GrandExchange.calculateTotalTax(this.itemId, pricePer, 1, this.createdTime);
 	}
-
 }

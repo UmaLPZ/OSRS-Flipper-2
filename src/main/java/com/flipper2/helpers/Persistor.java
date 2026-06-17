@@ -5,6 +5,9 @@ import com.flipper2.models.Transaction;
 
 import net.runelite.client.RuneLite;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import java.io.File;
 import java.io.IOException;
@@ -120,13 +123,25 @@ public class Persistor
 	public static List<Transaction> loadBuys() throws IOException
 	{
 		String jsonString = getFileContent(BUYS_JSON_FILE);
-		Type type = new TypeToken<List<Transaction>>()
+		JsonArray jsonArray = gson.fromJson(jsonString, JsonArray.class);
+		List<Transaction> buys = new ArrayList<>();
+		if (jsonArray != null)
 		{
-		}.getType();
-		List<Transaction> buys = gson.fromJson(jsonString, type);
-		if (buys == null)
-		{
-			return new ArrayList<Transaction>();
+			for (JsonElement element : jsonArray)
+			{
+				JsonObject obj = element.getAsJsonObject();
+				Transaction transaction = gson.fromJson(obj, Transaction.class);
+				if (obj.has("isAlched") && !transaction.isBuy())
+				{
+					transaction.setTax(GrandExchange.calculateTotalTax(
+						transaction.getItemId(),
+						transaction.getFinPricePer(),
+						transaction.getQuantity(),
+						transaction.getCreatedTime()
+					));
+				}
+				buys.add(transaction);
+			}
 		}
 		return buys;
 	}
@@ -134,13 +149,25 @@ public class Persistor
 	public static List<Transaction> loadSells() throws IOException
 	{
 		String jsonString = getFileContent(SELLS_JSON_FILE);
-		Type type = new TypeToken<List<Transaction>>()
+		JsonArray jsonArray = gson.fromJson(jsonString, JsonArray.class);
+		List<Transaction> sells = new ArrayList<>();
+		if (jsonArray != null)
 		{
-		}.getType();
-		List<Transaction> sells = gson.fromJson(jsonString, type);
-		if (sells == null)
-		{
-			return new ArrayList<Transaction>();
+			for (JsonElement element : jsonArray)
+			{
+				JsonObject obj = element.getAsJsonObject();
+				Transaction transaction = gson.fromJson(obj, Transaction.class);
+				if (obj.has("isAlched") && !transaction.isBuy())
+				{
+					transaction.setTax(GrandExchange.calculateTotalTax(
+						transaction.getItemId(),
+						transaction.getFinPricePer(),
+						transaction.getQuantity(),
+						transaction.getCreatedTime()
+					));
+				}
+				sells.add(transaction);
+			}
 		}
 		return sells;
 	}
@@ -162,13 +189,25 @@ public class Persistor
 	public static List<Flip> loadFlips() throws IOException
 	{
 		String jsonString = getFileContent(FLIPS_JSON_FILE);
-		Type type = new TypeToken<List<Flip>>()
+		JsonArray jsonArray = gson.fromJson(jsonString, JsonArray.class);
+		List<Flip> flips = new ArrayList<>();
+		if (jsonArray != null)
 		{
-		}.getType();
-		List<Flip> flips = gson.fromJson(jsonString, type);
-		if (flips == null)
-		{
-			return new ArrayList<>();
+			for (JsonElement element : jsonArray)
+			{
+				JsonObject obj = element.getAsJsonObject();
+				Flip flip = gson.fromJson(obj, Flip.class);
+				if (obj.has("userId"))
+				{
+					flip.setTax(GrandExchange.calculateTotalTax(
+						flip.getItemId(),
+						flip.getSellPrice(),
+						flip.getQuantity(),
+						flip.getCreatedAt().toInstant()
+					));
+				}
+				flips.add(flip);
+			}
 		}
 		return flips;
 	}

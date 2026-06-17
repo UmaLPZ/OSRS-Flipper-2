@@ -1,4 +1,3 @@
-
 package com.flipper2.helpers;
 
 import com.flipper2.models.Transaction;
@@ -8,11 +7,18 @@ import net.runelite.api.GrandExchangeOfferState;
 import net.runelite.api.ItemComposition;
 import net.runelite.client.game.ItemManager;
 
+import java.time.Instant;
+
 /**
  * Handles GrandExchange events
  */
 public class GrandExchange
 {
+	public static final double TAX_RATE = 0.02;
+	public static final double OLD_TAX_RATE = 0.01;
+	public static final int MAX_TAX = 5000000;
+	public static final long TAX_CHANGE_EPOCH = 1748514600L;
+
 	public static boolean checkIsBuy(GrandExchangeOfferState state)
 	{
 		return state == GrandExchangeOfferState.BOUGHT ||
@@ -86,5 +92,22 @@ public class GrandExchange
 		boolean isSameItem = sell.getItemId() == buy.getItemId();
 		boolean hasTransactionsBeenFlipped = sell.isFlipped() && buy.isFlipped();
 		return isSameItem && !hasTransactionsBeenFlipped;
+	}
+
+	public static int calculateTotalTax(int itemId, int pricePer, int quantity, Instant time)
+	{
+		if (itemId == 13190)
+		{
+			return 0;
+		}
+
+		double applicableRate = time.getEpochSecond() <= TAX_CHANGE_EPOCH
+			? OLD_TAX_RATE
+			: TAX_RATE;
+
+		int taxPerItem = (int) Math.floor(pricePer * applicableRate);
+		taxPerItem = Math.min(taxPerItem, MAX_TAX);
+
+		return taxPerItem * quantity;
 	}
 }

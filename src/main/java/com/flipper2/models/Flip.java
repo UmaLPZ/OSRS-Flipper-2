@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.util.UUID;
 
 import lombok.Data;
+import com.flipper2.helpers.GrandExchange;
 
 /**
  * Represents a buy and sell (flip) of an item
@@ -11,10 +12,8 @@ import lombok.Data;
 @Data
 public class Flip
 {
-	public static final double TAX_RATE = 0.01;
-
 	public UUID flipId;
-	public UUID userId;
+	public int tax;
 	public UUID buyId;
 	public UUID sellId;
 	public int itemId;
@@ -39,6 +38,7 @@ public class Flip
 		this.quantity = sell.getQuantity();
 		this.buyPrice = buy.getFinPricePer();
 		this.sellPrice = sell.getFinPricePer();
+		this.tax = sell.getTax();
 
 		this.updatedAt = new Timestamp(System.currentTimeMillis());
 		this.createdAt = new Timestamp(System.currentTimeMillis());
@@ -71,8 +71,7 @@ public class Flip
 	 */
 	public int getTax()
 	{
-		int taxPerItem = (int) Math.floor((double) this.sellPrice * TAX_RATE);
-		return Math.min(taxPerItem, Transaction.MAX_TAX);
+		return this.quantity > 0 ? this.tax / this.quantity : 0;
 	}
 
 	/**
@@ -82,12 +81,12 @@ public class Flip
 	 */
 	public int getTotalTax()
 	{
-		return getTax() * quantity;
+		return this.tax;
 	}
 
 	public int getTotalProfit()
 	{
-		return (sellPrice - buyPrice) * quantity - getTotalTax();
+		return (sellPrice - buyPrice) * quantity - this.tax;
 	}
 
 	public int getTotalBuy()
