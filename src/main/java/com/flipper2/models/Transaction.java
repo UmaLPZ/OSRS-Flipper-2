@@ -16,8 +16,8 @@ import com.flipper2.helpers.GrandExchange;
 public class Transaction
 {
 	public final UUID id;
-	private int quantity;
-	private int totalQuantity;
+	private int finQuantity;
+	private int initQuantity;
 	private int itemId;
 	private int finPricePer;
 	private int initPricePer;
@@ -26,15 +26,18 @@ public class Transaction
 	private boolean isBuy;
 	private boolean isComplete;
 	private boolean isFlipped;
-	private int tax;
+	private int finTax;
+	private int initTax;
+	private long initTotal;
+	private long finTotal;
 	private Instant completedTime;
 	private Instant createdTime;
 	private boolean hasCancelledOnce = false;
 	private GrandExchangeOfferState currentState;
 
 	public Transaction(
-		int quantity,
-		int totalQuantity,
+		int finQuantity,
+		int initQuantity,
 		int itemId,
 		int finPricePer,
 		int initPricePer,
@@ -45,8 +48,8 @@ public class Transaction
 	)
 	{
 		id = UUID.randomUUID();
-		this.quantity = quantity;
-		this.totalQuantity = totalQuantity;
+		this.finQuantity = finQuantity;
+		this.initQuantity = initQuantity;
 		this.itemId = itemId;
 		this.finPricePer = finPricePer;
 		this.initPricePer = initPricePer;
@@ -57,12 +60,28 @@ public class Transaction
 		this.createdTime = Instant.now();
 		this.isFlipped = false;
 		this.hasCancelledOnce = false;
-		this.tax = 0;
+
+		this.initTotal = (long) this.initPricePer * this.initQuantity;
+		this.finTotal = (long) this.finPricePer * this.finQuantity;
+
+		if (!this.isBuy)
+		{
+			int taxPerInit = GrandExchange.calculateTaxPerItem(this.itemId, this.initPricePer, this.createdTime);
+			this.initTax = taxPerInit * this.initQuantity;
+
+			int taxPerFin = GrandExchange.calculateTaxPerItem(this.itemId, this.finPricePer, this.createdTime);
+			this.finTax = taxPerFin * this.finQuantity;
+		}
+		else
+		{
+			this.initTax = 0;
+			this.finTax = 0;
+		}
 	}
 
 	public Transaction updateTransaction(GrandExchangeOffer offer)
 	{
-		this.quantity = offer.getQuantitySold();
+		this.finQuantity = offer.getQuantitySold();
 		this.currentState = offer.getState();
 
 		if (offer.getQuantitySold() > 0)
@@ -74,9 +93,12 @@ public class Transaction
 			this.finPricePer = 0;
 		}
 
+		this.finTotal = (long) this.finPricePer * this.finQuantity;
+
 		if (!this.isBuy)
 		{
-			this.tax = GrandExchange.calculateTotalTax(this.itemId, this.finPricePer, this.quantity, this.createdTime);
+			int taxPerFin = GrandExchange.calculateTaxPerItem(this.itemId, this.finPricePer, this.createdTime);
+			this.finTax = taxPerFin * this.finQuantity;
 		}
 
 		boolean isCancelState = GrandExchange.checkIsCancelState(offer.getState());
@@ -100,7 +122,7 @@ public class Transaction
 
 	public String describeTransaction()
 	{
-		return String.valueOf(this.quantity) + " " + this.itemName + "(s)";
+		return String.valueOf(this.finQuantity) + " " + this.itemName + "(s)";
 	}
 
 	public void setIsFlipped(boolean isFlipped)
@@ -110,6 +132,6 @@ public class Transaction
 
 	public int calculateTax(int pricePer)
 	{
-		return GrandExchange.calculateTotalTax(this.itemId, pricePer, 1, this.createdTime);
+		return GrandExchange.calculateTaxPerItem(this.itemId, pricePer, this.createdTime);
 	}
 }

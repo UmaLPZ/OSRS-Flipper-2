@@ -159,7 +159,7 @@ public class FlipsController
 
 	private String calculateTotalProfit(List<Flip> flipList)
 	{
-		int total = 0;
+		long total = 0;
 		for (Flip flip : flipList)
 		{
 			total += flip.getTotalProfit();
@@ -171,10 +171,20 @@ public class FlipsController
 	{
 		flip.setSellPrice(sell.getFinPricePer());
 		flip.setBuyPrice(buy.getFinPricePer());
-		flip.setQuantity(sell.getQuantity());
+		flip.setQuantity(sell.getFinQuantity());
 		flip.setItemId(sell.getItemId());
 		flip.setItemName(sell.getItemName());
-		flip.setTax(sell.getTax());
+
+		flip.setTax(sell.getFinTax());
+		flip.setTaxPerItem(flip.getQuantity() > 0 ? flip.getTax() / flip.getQuantity() : 0);
+
+		flip.setTotalBuy((long) flip.getBuyPrice() * flip.getQuantity());
+		flip.setTotalSell((long) flip.getSellPrice() * flip.getQuantity());
+		flip.setTotalProfit(flip.getTotalSell() - flip.getTotalBuy() - flip.getTax());
+		flip.setProfitPerItem(flip.getQuantity() > 0 ? (int) (flip.getTotalProfit() / flip.getQuantity()) : 0);
+
+		flip.setMarginCheck(flip.getQuantity() == 1 && flip.getBuyPrice() >= flip.getSellPrice());
+
 		this.totalProfit = calculateTotalProfit(flips);
 		Persistor.saveFlips(this.flips);
 		getFlipNamesAndBuild();
