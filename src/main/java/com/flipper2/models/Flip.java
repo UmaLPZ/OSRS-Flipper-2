@@ -14,6 +14,7 @@ public class Flip
 {
 	public UUID flipId;
 	public int tax;
+	public int taxPerItem;
 	public UUID buyId;
 	public UUID sellId;
 	public int itemId;
@@ -21,6 +22,11 @@ public class Flip
 	public int quantity;
 	public int buyPrice;
 	public int sellPrice;
+	public long totalBuy;
+	public long totalSell;
+	public int profitPerItem;
+	public long totalProfit;
+	public boolean isMarginCheck;
 	private Timestamp updatedAt;
 	private Timestamp createdAt;
 
@@ -35,22 +41,22 @@ public class Flip
 		this.sellId = sell.id;
 		this.itemId = sell.getItemId();
 		this.itemName = sell.getItemName();
-		this.quantity = sell.getQuantity();
+		this.quantity = sell.getFinQuantity();
 		this.buyPrice = buy.getFinPricePer();
 		this.sellPrice = sell.getFinPricePer();
-		this.tax = sell.getTax();
+
+		this.tax = sell.getFinTax();
+		this.taxPerItem = this.quantity > 0 ? this.tax / this.quantity : 0;
+
+		this.totalBuy = (long) this.buyPrice * this.quantity;
+		this.totalSell = (long) this.sellPrice * this.quantity;
+		this.totalProfit = this.totalSell - this.totalBuy - this.tax;
+		this.profitPerItem = this.quantity > 0 ? (int) (this.totalProfit / this.quantity) : 0;
+
+		this.isMarginCheck = this.quantity == 1 && this.buyPrice >= this.sellPrice;
 
 		this.updatedAt = new Timestamp(System.currentTimeMillis());
 		this.createdAt = new Timestamp(System.currentTimeMillis());
-	}
-
-	/**
-	 * We know a flip is a margin check when only 1 is bought and it's bought for a
-	 * greater to or equal price than sold for
-	 */
-	public boolean isMarginCheck()
-	{
-		return quantity == 1 && buyPrice >= sellPrice;
 	}
 
 	public String describeFlip()
@@ -58,44 +64,28 @@ public class Flip
 		return String.valueOf(quantity) + " " + this.itemName + "(s)";
 	}
 
-	/**
-	 * We only concern ourselves with the amount sold (ignore extra bought and kept)
-	 *
-	 * @return profit of flip
-	 */
-
-	/**
-	 * The GE floors tax per item.
-	 *
-	 * @return tax per item of flip
-	 */
 	public int getTax()
 	{
-		return this.quantity > 0 ? this.tax / this.quantity : 0;
+		return this.taxPerItem;
 	}
 
-	/**
-	 * Gets the total tax of the sale
-	 *
-	 * @return total tax of sale
-	 */
 	public int getTotalTax()
 	{
 		return this.tax;
 	}
 
-	public int getTotalProfit()
+	public long getTotalProfit()
 	{
-		return (sellPrice - buyPrice) * quantity - this.tax;
+		return this.totalProfit;
 	}
 
-	public int getTotalBuy()
+	public long getTotalBuy()
 	{
-		return buyPrice * quantity;
+		return this.totalBuy;
 	}
 
-	public int getTotalSell()
+	public long getTotalSell()
 	{
-		return sellPrice * quantity;
+		return this.totalSell;
 	}
 }

@@ -108,15 +108,6 @@ public class TransactionController
 
 
 		Transaction newTransaction = GrandExchange.createTransactionFromOffer(offer, itemManager, slot);
-		if (!newTransaction.isBuy())
-		{
-			newTransaction.setTax(GrandExchange.calculateTotalTax(
-				newTransaction.getItemId(),
-				newTransaction.getFinPricePer(),
-				newTransaction.getQuantity(),
-				newTransaction.getCreatedTime()
-			));
-		}
 		this.addTransaction(newTransaction);
 		return newTransaction;
 	}

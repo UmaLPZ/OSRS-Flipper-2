@@ -15,6 +15,7 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -130,16 +131,31 @@ public class Persistor
 			for (JsonElement element : jsonArray)
 			{
 				JsonObject obj = element.getAsJsonObject();
-				Transaction transaction = gson.fromJson(obj, Transaction.class);
-				if (obj.has("isAlched") && !transaction.isBuy())
+				if (obj.has("quantity"))
 				{
-					transaction.setTax(GrandExchange.calculateTotalTax(
-						transaction.getItemId(),
-						transaction.getFinPricePer(),
-						transaction.getQuantity(),
-						transaction.getCreatedTime()
-					));
+					obj.addProperty("finQuantity", obj.get("quantity").getAsInt());
+					obj.remove("quantity");
 				}
+				if (obj.has("totalQuantity"))
+				{
+					obj.addProperty("initQuantity", obj.get("totalQuantity").getAsInt());
+					obj.remove("totalQuantity");
+				}
+
+				Transaction transaction = gson.fromJson(obj, Transaction.class);
+
+				transaction.setInitTotal((long) transaction.getInitPricePer() * transaction.getInitQuantity());
+				transaction.setFinTotal((long) transaction.getFinPricePer() * transaction.getFinQuantity());
+
+				if (!transaction.isBuy())
+				{
+					int taxPerInit = GrandExchange.calculateTaxPerItem(transaction.getItemId(), transaction.getInitPricePer(), transaction.getCreatedTime());
+					transaction.setInitTax(taxPerInit * transaction.getInitQuantity());
+
+					int taxPerFin = GrandExchange.calculateTaxPerItem(transaction.getItemId(), transaction.getFinPricePer(), transaction.getCreatedTime());
+					transaction.setFinTax(taxPerFin * transaction.getFinQuantity());
+				}
+
 				buys.add(transaction);
 			}
 		}
@@ -156,16 +172,31 @@ public class Persistor
 			for (JsonElement element : jsonArray)
 			{
 				JsonObject obj = element.getAsJsonObject();
-				Transaction transaction = gson.fromJson(obj, Transaction.class);
-				if (obj.has("isAlched") && !transaction.isBuy())
+				if (obj.has("quantity"))
 				{
-					transaction.setTax(GrandExchange.calculateTotalTax(
-						transaction.getItemId(),
-						transaction.getFinPricePer(),
-						transaction.getQuantity(),
-						transaction.getCreatedTime()
-					));
+					obj.addProperty("finQuantity", obj.get("quantity").getAsInt());
+					obj.remove("quantity");
 				}
+				if (obj.has("totalQuantity"))
+				{
+					obj.addProperty("initQuantity", obj.get("totalQuantity").getAsInt());
+					obj.remove("totalQuantity");
+				}
+
+				Transaction transaction = gson.fromJson(obj, Transaction.class);
+
+				transaction.setInitTotal((long) transaction.getInitPricePer() * transaction.getInitQuantity());
+				transaction.setFinTotal((long) transaction.getFinPricePer() * transaction.getFinQuantity());
+
+				if (!transaction.isBuy())
+				{
+					int taxPerInit = GrandExchange.calculateTaxPerItem(transaction.getItemId(), transaction.getInitPricePer(), transaction.getCreatedTime());
+					transaction.setInitTax(taxPerInit * transaction.getInitQuantity());
+
+					int taxPerFin = GrandExchange.calculateTaxPerItem(transaction.getItemId(), transaction.getFinPricePer(), transaction.getCreatedTime());
+					transaction.setFinTax(taxPerFin * transaction.getFinQuantity());
+				}
+
 				sells.add(transaction);
 			}
 		}
@@ -197,15 +228,21 @@ public class Persistor
 			{
 				JsonObject obj = element.getAsJsonObject();
 				Flip flip = gson.fromJson(obj, Flip.class);
+
+				flip.setTotalBuy((long) flip.getBuyPrice() * flip.getQuantity());
+				flip.setTotalSell((long) flip.getSellPrice() * flip.getQuantity());
+
 				if (obj.has("userId"))
 				{
-					flip.setTax(GrandExchange.calculateTotalTax(
-						flip.getItemId(),
-						flip.getSellPrice(),
-						flip.getQuantity(),
-						flip.getCreatedAt().toInstant()
-					));
+					int taxTotal = GrandExchange.calculateTaxPerItem(flip.getItemId(), flip.getSellPrice(), flip.getCreatedAt().toInstant()) * flip.getQuantity();
+					flip.setTax(taxTotal);
 				}
+
+				flip.setTaxPerItem(flip.getQuantity() > 0 ? flip.getTax() / flip.getQuantity() : 0);
+				flip.setTotalProfit(flip.getTotalSell() - flip.getTotalBuy() - flip.getTax());
+				flip.setProfitPerItem(flip.getQuantity() > 0 ? (int) (flip.getTotalProfit() / flip.getQuantity()) : 0);
+				flip.setMarginCheck(flip.getQuantity() == 1 && flip.getBuyPrice() >= flip.getSellPrice());
+
 				flips.add(flip);
 			}
 		}

@@ -55,7 +55,9 @@ public class GrandExchange
 	/**
 	 * Potentially creates a transaction based on the GrandExchange event
 	 *
-	 * @param newOfferEvent
+	 * @param offer
+	 * @param itemManager
+	 * @param slot
 	 * @return null or newly created transaction
 	 */
 	public static Transaction createTransactionFromOffer(GrandExchangeOffer offer, ItemManager itemManager, int slot)
@@ -84,7 +86,7 @@ public class GrandExchange
 			(!transaction.isComplete() || (transaction.isComplete() && GrandExchange.checkIsComplete(offer.getState()))) &&
 				transaction.getSlot() == slot &&
 				transaction.getItemId() == offer.getItemId() &&
-				transaction.getTotalQuantity() == offer.getTotalQuantity();
+				transaction.getInitQuantity() == offer.getTotalQuantity();
 	}
 
 	public static boolean checkIsSellAFlipOfBuy(Transaction sell, Transaction buy)
@@ -94,7 +96,7 @@ public class GrandExchange
 		return isSameItem && !hasTransactionsBeenFlipped;
 	}
 
-	public static int calculateTotalTax(int itemId, int pricePer, int quantity, Instant time)
+	public static int calculateTaxPerItem(int itemId, int pricePer, Instant time)
 	{
 		if (itemId == 13190)
 		{
@@ -106,8 +108,6 @@ public class GrandExchange
 			: TAX_RATE;
 
 		int taxPerItem = (int) Math.floor(pricePer * applicableRate);
-		taxPerItem = Math.min(taxPerItem, MAX_TAX);
-
-		return taxPerItem * quantity;
+		return Math.min(taxPerItem, MAX_TAX);
 	}
 }
