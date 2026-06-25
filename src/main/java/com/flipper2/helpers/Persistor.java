@@ -134,27 +134,25 @@ public class Persistor
 				if (obj.has("quantity"))
 				{
 					obj.addProperty("finQuantity", obj.get("quantity").getAsInt());
-					obj.remove("quantity");
 				}
 				if (obj.has("totalQuantity"))
 				{
 					obj.addProperty("initQuantity", obj.get("totalQuantity").getAsInt());
-					obj.remove("totalQuantity");
 				}
 
 				Transaction transaction = gson.fromJson(obj, Transaction.class);
 
-				transaction.setInitTotal((long) transaction.getInitPricePer() * transaction.getInitQuantity());
-				transaction.setFinTotal((long) transaction.getFinPricePer() * transaction.getFinQuantity());
-
 				if (!transaction.isBuy())
 				{
-					int taxPerInit = GrandExchange.calculateTaxPerItem(transaction.getItemId(), transaction.getInitPricePer(), transaction.getCreatedTime());
-					transaction.setInitTax(taxPerInit * transaction.getInitQuantity());
+					transaction.setInitTaxPer(GrandExchange.calculateTaxPerItem(transaction.getItemId(), transaction.getInitPricePer(), transaction.getCreatedTime()));
+					transaction.setInitTax(transaction.getInitTaxPer() * transaction.getInitQuantity());
 
-					int taxPerFin = GrandExchange.calculateTaxPerItem(transaction.getItemId(), transaction.getFinPricePer(), transaction.getCreatedTime());
-					transaction.setFinTax(taxPerFin * transaction.getFinQuantity());
+					transaction.setFinTaxPer(GrandExchange.calculateTaxPerItem(transaction.getItemId(), transaction.getFinPricePer(), transaction.getCreatedTime()));
+					transaction.setFinTax(transaction.getFinTaxPer() * transaction.getFinQuantity());
 				}
+
+				transaction.setInitTotal(((long) transaction.getInitPricePer() * transaction.getInitQuantity()) - transaction.getInitTax());
+				transaction.setFinTotal(((long) transaction.getFinPricePer() * transaction.getFinQuantity()) - transaction.getFinTax());
 
 				buys.add(transaction);
 			}
@@ -175,27 +173,25 @@ public class Persistor
 				if (obj.has("quantity"))
 				{
 					obj.addProperty("finQuantity", obj.get("quantity").getAsInt());
-					obj.remove("quantity");
 				}
 				if (obj.has("totalQuantity"))
 				{
 					obj.addProperty("initQuantity", obj.get("totalQuantity").getAsInt());
-					obj.remove("totalQuantity");
 				}
 
 				Transaction transaction = gson.fromJson(obj, Transaction.class);
 
-				transaction.setInitTotal((long) transaction.getInitPricePer() * transaction.getInitQuantity());
-				transaction.setFinTotal((long) transaction.getFinPricePer() * transaction.getFinQuantity());
-
 				if (!transaction.isBuy())
 				{
-					int taxPerInit = GrandExchange.calculateTaxPerItem(transaction.getItemId(), transaction.getInitPricePer(), transaction.getCreatedTime());
-					transaction.setInitTax(taxPerInit * transaction.getInitQuantity());
+					transaction.setInitTaxPer(GrandExchange.calculateTaxPerItem(transaction.getItemId(), transaction.getInitPricePer(), transaction.getCreatedTime()));
+					transaction.setInitTax(transaction.getInitTaxPer() * transaction.getInitQuantity());
 
-					int taxPerFin = GrandExchange.calculateTaxPerItem(transaction.getItemId(), transaction.getFinPricePer(), transaction.getCreatedTime());
-					transaction.setFinTax(taxPerFin * transaction.getFinQuantity());
+					transaction.setFinTaxPer(GrandExchange.calculateTaxPerItem(transaction.getItemId(), transaction.getFinPricePer(), transaction.getCreatedTime()));
+					transaction.setFinTax(transaction.getFinTaxPer() * transaction.getFinQuantity());
 				}
+
+				transaction.setInitTotal(((long) transaction.getInitPricePer() * transaction.getInitQuantity()) - transaction.getInitTax());
+				transaction.setFinTotal(((long) transaction.getFinPricePer() * transaction.getFinQuantity()) - transaction.getFinTax());
 
 				sells.add(transaction);
 			}
@@ -229,16 +225,13 @@ public class Persistor
 				JsonObject obj = element.getAsJsonObject();
 				Flip flip = gson.fromJson(obj, Flip.class);
 
+				// RE-CALCULATE ALL TAX AND TOTALS ON LOAD
+				int taxPerItem = GrandExchange.calculateTaxPerItem(flip.getItemId(), flip.getSellPrice(), flip.getCreatedAt().toInstant());
+				flip.setTax(taxPerItem * flip.getQuantity());
+				flip.setTaxPerItem(taxPerItem);
+
 				flip.setTotalBuy((long) flip.getBuyPrice() * flip.getQuantity());
 				flip.setTotalSell((long) flip.getSellPrice() * flip.getQuantity());
-
-				if (obj.has("userId"))
-				{
-					int taxTotal = GrandExchange.calculateTaxPerItem(flip.getItemId(), flip.getSellPrice(), flip.getCreatedAt().toInstant()) * flip.getQuantity();
-					flip.setTax(taxTotal);
-				}
-
-				flip.setTaxPerItem(flip.getQuantity() > 0 ? flip.getTax() / flip.getQuantity() : 0);
 				flip.setTotalProfit(flip.getTotalSell() - flip.getTotalBuy() - flip.getTax());
 				flip.setProfitPerItem(flip.getQuantity() > 0 ? (int) (flip.getTotalProfit() / flip.getQuantity()) : 0);
 				flip.setMarginCheck(flip.getQuantity() == 1 && flip.getBuyPrice() >= flip.getSellPrice());
