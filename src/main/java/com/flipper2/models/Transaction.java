@@ -28,6 +28,8 @@ public class Transaction
 	private boolean isFlipped;
 	private int finTax;
 	private int initTax;
+	private int finTaxPer;
+	private int initTaxPer;
 	private long initTotal;
 	private long finTotal;
 	private Instant completedTime;
@@ -61,22 +63,24 @@ public class Transaction
 		this.isFlipped = false;
 		this.hasCancelledOnce = false;
 
-		this.initTotal = (long) this.initPricePer * this.initQuantity;
-		this.finTotal = (long) this.finPricePer * this.finQuantity;
-
 		if (!this.isBuy)
 		{
-			int taxPerInit = GrandExchange.calculateTaxPerItem(this.itemId, this.initPricePer, this.createdTime);
-			this.initTax = taxPerInit * this.initQuantity;
+			this.initTaxPer = GrandExchange.calculateTaxPerItem(this.itemId, this.initPricePer, this.createdTime);
+			this.initTax = this.initTaxPer * this.initQuantity;
 
-			int taxPerFin = GrandExchange.calculateTaxPerItem(this.itemId, this.finPricePer, this.createdTime);
-			this.finTax = taxPerFin * this.finQuantity;
+			this.finTaxPer = GrandExchange.calculateTaxPerItem(this.itemId, this.finPricePer, this.createdTime);
+			this.finTax = this.finTaxPer * this.finQuantity;
 		}
 		else
 		{
+			this.initTaxPer = 0;
 			this.initTax = 0;
+			this.finTaxPer = 0;
 			this.finTax = 0;
 		}
+
+		this.initTotal = ((long) this.initPricePer * this.initQuantity) - this.initTax;
+		this.finTotal = ((long) this.finPricePer * this.finQuantity) - this.finTax;
 	}
 
 	public Transaction updateTransaction(GrandExchangeOffer offer)
@@ -93,13 +97,13 @@ public class Transaction
 			this.finPricePer = 0;
 		}
 
-		this.finTotal = (long) this.finPricePer * this.finQuantity;
-
 		if (!this.isBuy)
 		{
-			int taxPerFin = GrandExchange.calculateTaxPerItem(this.itemId, this.finPricePer, this.createdTime);
-			this.finTax = taxPerFin * this.finQuantity;
+			this.finTaxPer = GrandExchange.calculateTaxPerItem(this.itemId, this.finPricePer, this.createdTime);
+			this.finTax = this.finTaxPer * this.finQuantity;
 		}
+
+		this.finTotal = ((long) this.finPricePer * this.finQuantity) - this.finTax;
 
 		boolean isCancelState = GrandExchange.checkIsCancelState(offer.getState());
 

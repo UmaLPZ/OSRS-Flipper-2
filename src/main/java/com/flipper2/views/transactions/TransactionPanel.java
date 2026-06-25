@@ -181,6 +181,11 @@ public class TransactionPanel extends JPanel
 
 		if (!transaction.isBuy())
 		{
+			JPanel taxPerPanelLabel = new CustomPanel(new BorderLayout(), true);
+			JLabel taxPerLabel = newLeftLabel("Tax/Per:");
+			taxPerPanelLabel.add(taxPerLabel, BorderLayout.WEST);
+			labelPanel.add(taxPerPanelLabel);
+
 			JPanel taxPanelLabel = new CustomPanel(new BorderLayout(), true);
 			JLabel taxLabel = newLeftLabel("Tax:");
 			taxPanelLabel.add(taxLabel, BorderLayout.WEST);
@@ -217,10 +222,16 @@ public class TransactionPanel extends JPanel
 
 		if (!transaction.isBuy())
 		{
+			JPanel taxPerPanel = new CustomPanel(new BorderLayout(), true);
+			int initTaxPer = transaction.getInitTaxPer();
+			JLabel taxPerValueLabel = newRightLabel(Numbers.toShortNumber(initTaxPer), ColorScheme.PROGRESS_ERROR_COLOR);
+			taxPerValueLabel.setToolTipText(Numbers.numberWithCommas(initTaxPer));
+			taxPerPanel.add(taxPerValueLabel, BorderLayout.CENTER);
+			contentPanel1.add(taxPerPanel);
+
 			JPanel taxPanel = new CustomPanel(new BorderLayout(), true);
 			int initTax = transaction.getInitTax();
-			String initTaxText = Numbers.toShortNumber(initTax);
-			JLabel taxValueLabel = newRightLabel(initTaxText, ColorScheme.PROGRESS_ERROR_COLOR);
+			JLabel taxValueLabel = newRightLabel(Numbers.toShortNumber(initTax), ColorScheme.PROGRESS_ERROR_COLOR);
 			taxValueLabel.setToolTipText(Numbers.numberWithCommas(initTax));
 			taxPanel.add(taxValueLabel, BorderLayout.CENTER);
 			contentPanel1.add(taxPanel);
@@ -257,10 +268,16 @@ public class TransactionPanel extends JPanel
 
 		if (!transaction.isBuy())
 		{
+			JPanel taxPerPanel = new CustomPanel(new BorderLayout(), true);
+			int finTaxPer = transaction.getFinTaxPer();
+			JLabel taxPerValueLabel = newRightLabel(Numbers.toShortNumber(finTaxPer), ColorScheme.PROGRESS_ERROR_COLOR);
+			taxPerValueLabel.setToolTipText(Numbers.numberWithCommas(finTaxPer));
+			taxPerPanel.add(taxPerValueLabel, BorderLayout.CENTER);
+			contentPanel2.add(taxPerPanel);
+
 			JPanel taxPanel = new CustomPanel(new BorderLayout(), true);
 			int finTax = transaction.getFinTax();
-			String finTaxText = Numbers.toShortNumber(finTax);
-			JLabel taxValueLabel = newRightLabel(finTaxText, ColorScheme.PROGRESS_ERROR_COLOR);
+			JLabel taxValueLabel = newRightLabel(Numbers.toShortNumber(finTax), ColorScheme.PROGRESS_ERROR_COLOR);
 			taxValueLabel.setToolTipText(Numbers.numberWithCommas(finTax));
 			taxPanel.add(taxValueLabel, BorderLayout.CENTER);
 			contentPanel2.add(taxPanel);
