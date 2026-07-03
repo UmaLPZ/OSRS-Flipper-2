@@ -26,6 +26,7 @@ public class Transaction
 	private boolean isBuy;
 	private boolean isComplete;
 	private boolean isFlipped;
+	private int flippedQuantity;
 	private int finTax;
 	private int initTax;
 	private int finTaxPer;
@@ -61,7 +62,13 @@ public class Transaction
 		this.isComplete = isComplete;
 		this.createdTime = Instant.now();
 		this.isFlipped = false;
+		this.flippedQuantity = 0;
 		this.hasCancelledOnce = false;
+
+		this.initTaxPer = 0;
+		this.initTax = 0;
+		this.finTaxPer = 0;
+		this.finTax = 0;
 
 		if (!this.isBuy)
 		{
@@ -70,13 +77,6 @@ public class Transaction
 
 			this.finTaxPer = GrandExchange.calculateTaxPerItem(this.itemId, this.finPricePer, this.createdTime);
 			this.finTax = this.finTaxPer * this.finQuantity;
-		}
-		else
-		{
-			this.initTaxPer = 0;
-			this.initTax = 0;
-			this.finTaxPer = 0;
-			this.finTax = 0;
 		}
 
 		this.initTotal = ((long) this.initPricePer * this.initQuantity) - this.initTax;

@@ -55,8 +55,9 @@ public class Flip
 
 		this.isMarginCheck = this.quantity == 1 && this.buyPrice >= this.sellPrice;
 
-		this.updatedAt = new Timestamp(System.currentTimeMillis());
-		this.createdAt = new Timestamp(System.currentTimeMillis());
+		// Default to Sell time (used if this is a newly discovered "missed" flip)
+		this.updatedAt = new Timestamp(sell.getCreatedTime().toEpochMilli());
+		this.createdAt = new Timestamp(sell.getCreatedTime().toEpochMilli());
 	}
 
 	public String describeFlip()

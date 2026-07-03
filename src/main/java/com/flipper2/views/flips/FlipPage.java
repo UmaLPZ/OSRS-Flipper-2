@@ -103,7 +103,6 @@ public class FlipPage extends JPanel
 					if (input == 0)
 					{
 						refreshFlipsRunnable.run();
-						setVisible(false);
 					}
 				}
 				catch (Exception error)

@@ -142,6 +142,11 @@ public class Persistor
 
 				Transaction transaction = gson.fromJson(obj, Transaction.class);
 
+				if (obj.has("isFlipped") && obj.get("isFlipped").getAsBoolean() && !obj.has("flippedQuantity"))
+				{
+					transaction.setFlippedQuantity(transaction.getInitQuantity());
+				}
+
 				if (!transaction.isBuy())
 				{
 					transaction.setInitTaxPer(GrandExchange.calculateTaxPerItem(transaction.getItemId(), transaction.getInitPricePer(), transaction.getCreatedTime()));
@@ -180,6 +185,11 @@ public class Persistor
 				}
 
 				Transaction transaction = gson.fromJson(obj, Transaction.class);
+
+				if (obj.has("isFlipped") && obj.get("isFlipped").getAsBoolean() && !obj.has("flippedQuantity"))
+				{
+					transaction.setFlippedQuantity(transaction.getInitQuantity());
+				}
 
 				if (!transaction.isBuy())
 				{
@@ -225,7 +235,6 @@ public class Persistor
 				JsonObject obj = element.getAsJsonObject();
 				Flip flip = gson.fromJson(obj, Flip.class);
 
-				// RE-CALCULATE ALL TAX AND TOTALS ON LOAD
 				int taxPerItem = GrandExchange.calculateTaxPerItem(flip.getItemId(), flip.getSellPrice(), flip.getCreatedAt().toInstant());
 				flip.setTax(taxPerItem * flip.getQuantity());
 				flip.setTaxPerItem(taxPerItem);
