@@ -92,8 +92,8 @@ public class GrandExchange
 	public static boolean checkIsSellAFlipOfBuy(Transaction sell, Transaction buy)
 	{
 		boolean isSameItem = sell.getItemId() == buy.getItemId();
-		boolean hasTransactionsBeenFlipped = sell.isFlipped() && buy.isFlipped();
-		return isSameItem && !hasTransactionsBeenFlipped;
+		boolean buyHasStock = buy.getInitQuantity() > buy.getFlippedQuantity();
+		return isSameItem && buyHasStock;
 	}
 
 	public static int calculateTaxPerItem(int itemId, int pricePer, Instant time)

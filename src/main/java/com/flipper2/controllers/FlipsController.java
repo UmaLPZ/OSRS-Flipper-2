@@ -1,10 +1,13 @@
 package com.flipper2.controllers;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -213,66 +216,83 @@ public class FlipsController
 		return true;
 	}
 
+	private void removeFlipsBySellId(UUID sellId, List<Transaction> buys)
+	{
+		Iterator<Flip> it = flips.iterator();
+		while (it.hasNext())
+		{
+			Flip flip = it.next();
+			if (flip.getSellId().equals(sellId))
+			{
+				for (Transaction buy : buys)
+				{
+					if (buy.getId().equals(flip.getBuyId()))
+					{
+						buy.setFlippedQuantity(Math.max(0, buy.getFlippedQuantity() - flip.getQuantity()));
+						buy.setIsFlipped(false);
+					}
+				}
+				it.remove();
+			}
+		}
+	}
+
 	/**
 	 * Potentially creates a flip if the sell is complete and has a corresponding
-	 * buy. This logic remains largely the same, but it now interacts with the local
-	 * lists instead of the API.
+	 * buy.
 	 */
 	public Flip upsertFlip(Transaction sell, List<Transaction> buys)
 	{
-		if (sell.isBuy())
-		{
-			return null;
-		}
-		ListIterator<Transaction> buysIterator = buys.listIterator(buys.size());
-
+		if (sell.isBuy()) return null;
 
 		if (sell.isFlipped())
 		{
-			ListIterator<Flip> flipsIterator = flips.listIterator();
-			while (flipsIterator.hasNext())
-			{
-				Flip flip = flipsIterator.next();
-				if (flip.getSellId().equals(sell.getId()))
-				{
+			removeFlipsBySellId(sell.getId(), buys);
+			sell.setIsFlipped(false);
+		}
 
-					while (buysIterator.hasPrevious())
+		if (this.isTrackingFlips)
+		{
+			int remainingToFlip = sell.getFinQuantity();
+			ListIterator<Transaction> buysIterator = buys.listIterator(buys.size());
+
+			while (buysIterator.hasPrevious() && remainingToFlip > 0)
+			{
+				Transaction buy = buysIterator.previous();
+
+				if (GrandExchange.checkIsSellAFlipOfBuy(sell, buy))
+				{
+					int availableInBuy = buy.getInitQuantity() - buy.getFlippedQuantity();
+					int amountToTake = Math.min(remainingToFlip, availableInBuy);
+
+					if (amountToTake > 0)
 					{
-						Transaction buy = buysIterator.previous();
-						if (buy.getId().equals(flip.getBuyId()))
+						Flip flip = new Flip(buy, sell);
+
+						flip.setQuantity(amountToTake);
+						flip.setTax(sell.getFinTaxPer() * amountToTake);
+						flip.setTaxPerItem(sell.getFinTaxPer());
+						flip.setTotalBuy((long) buy.getFinPricePer() * amountToTake);
+						flip.setTotalSell((long) sell.getFinPricePer() * amountToTake);
+						flip.setTotalProfit(flip.getTotalSell() - flip.getTotalBuy() - flip.getTax());
+						flip.setProfitPerItem(sell.getFinPricePer() - buy.getFinPricePer() - sell.getFinTaxPer());
+						flip.setMarginCheck(amountToTake == 1 && buy.getFinPricePer() >= sell.getFinPricePer());
+
+						this.addFlip(flip);
+
+						buy.setFlippedQuantity(buy.getFlippedQuantity() + amountToTake);
+						if (buy.getFlippedQuantity() >= buy.getInitQuantity())
 						{
-							updateFlip(sell, buy, flip);
-							return flip;
+							buy.setIsFlipped(true);
 						}
+						remainingToFlip -= amountToTake;
 					}
 				}
 			}
-		}
-		else
-		{
 
-			if (this.isTrackingFlips)
+			if (remainingToFlip < sell.getFinQuantity())
 			{
-				while (buysIterator.hasPrevious())
-				{
-					Transaction buy = buysIterator.previous();
-					if (!buy.isBuy() || buy.getId().equals(sell.getId()))
-					{
-						continue;
-					}
-
-					if (GrandExchange.checkIsSellAFlipOfBuy(sell, buy))
-					{
-						Flip flip = new Flip(buy, sell);
-						if (!flip.isMarginCheck())
-						{
-							this.addFlip(flip);
-							buy.setIsFlipped(true);
-							sell.setIsFlipped(true);
-						}
-						return flip;
-					}
-				}
+				sell.setIsFlipped(true);
 			}
 		}
 
@@ -324,10 +344,20 @@ public class FlipsController
 
 	public void repairFlips(List<Transaction> allBuys, List<Transaction> allSells)
 	{
+		// 1. Cache existing dates and IDs
+		Map<UUID, Flip> oldFlipsMap = new HashMap<>();
+		for (Flip f : this.flips)
+		{
+			oldFlipsMap.put(f.getSellId(), f);
+		}
+
 		this.flips.clear();
+		this.filteredFlips.clear();
+
 		for (Transaction b : allBuys)
 		{
 			b.setIsFlipped(false);
+			b.setFlippedQuantity(0);
 		}
 		for (Transaction s : allSells)
 		{
@@ -338,32 +368,59 @@ public class FlipsController
 
 		for (Transaction sell : allSells)
 		{
-			if (sell.isBuy())
-			{
-				continue;
-			}
+			if (sell.isBuy()) continue;
 
-			for (int i = allBuys.size() - 1; i >= 0; i--)
+			int remainingToFlip = sell.getFinQuantity();
+			for (int i = allBuys.size() - 1; i >= 0 && remainingToFlip > 0; i--)
 			{
 				Transaction buy = allBuys.get(i);
 
-				if (buy.isBuy() && !buy.isFlipped() && !buy.getId().equals(sell.getId()))
+				if (GrandExchange.checkIsSellAFlipOfBuy(sell, buy))
 				{
-					if (GrandExchange.checkIsSellAFlipOfBuy(sell, buy))
+					int availableInBuy = buy.getInitQuantity() - buy.getFlippedQuantity();
+					int amountToTake = Math.min(remainingToFlip, availableInBuy);
+
+					if (amountToTake > 0)
 					{
 						Flip flip = new Flip(buy, sell);
-						if (!flip.isMarginCheck())
+
+						// Re-apply original Metadata if it exists
+						if (oldFlipsMap.containsKey(sell.getId()))
 						{
-							this.flips.add(0, flip);
-							buy.setIsFlipped(true);
-							sell.setIsFlipped(true);
-							break;
+							Flip old = oldFlipsMap.get(sell.getId());
+							flip.setFlipId(old.getFlipId());
+							flip.setCreatedAt(old.getCreatedAt());
+							flip.setUpdatedAt(old.getUpdatedAt());
 						}
+
+						flip.setQuantity(amountToTake);
+						flip.setTax(sell.getFinTaxPer() * amountToTake);
+						flip.setTaxPerItem(sell.getFinTaxPer());
+						flip.setTotalBuy((long) buy.getFinPricePer() * amountToTake);
+						flip.setTotalSell((long) sell.getFinPricePer() * amountToTake);
+						flip.setTotalProfit(flip.getTotalSell() - flip.getTotalBuy() - flip.getTax());
+						flip.setProfitPerItem(sell.getFinPricePer() - buy.getFinPricePer() - sell.getFinTaxPer());
+						flip.setMarginCheck(amountToTake == 1 && buy.getFinPricePer() >= sell.getFinPricePer());
+
+						this.flips.add(0, flip);
+
+						buy.setFlippedQuantity(buy.getFlippedQuantity() + amountToTake);
+						if (buy.getFlippedQuantity() >= buy.getInitQuantity())
+						{
+							buy.setIsFlipped(true);
+						}
+						remainingToFlip -= amountToTake;
 					}
 				}
 			}
+			if (remainingToFlip < sell.getFinQuantity())
+			{
+				sell.setIsFlipped(true);
+			}
 		}
+
 		this.totalProfit = calculateTotalProfit(this.flips);
+		this.filteredFlips = new ArrayList<>(this.flips);
 		Persistor.saveFlips(this.flips);
 		getFlipNamesAndBuild();
 	}
