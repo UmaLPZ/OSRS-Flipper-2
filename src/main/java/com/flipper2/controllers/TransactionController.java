@@ -9,14 +9,12 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.awt.BorderLayout;
 
-import javax.swing.JButton;
 import javax.swing.SwingUtilities;
 
 import com.flipper2.helpers.GrandExchange;
 import com.flipper2.helpers.UiUtilities;
 import com.flipper2.models.Transaction;
 import com.flipper2.views.transactions.TransactionPanel;
-import com.google.common.base.Supplier;
 import com.flipper2.views.transactions.TransactionPage;
 import com.flipper2.views.components.Pagination;
 
@@ -36,7 +34,6 @@ public class TransactionController
 	protected ItemManager itemManager;
 	protected Pagination pagination;
 	protected Consumer<UUID> removeTransactionConsumer;
-	protected JButton extraComponent;
 	protected boolean isPrompt;
 	protected String searchText;
 	protected Consumer<String> onSearchTextChangedCallback;
@@ -49,12 +46,6 @@ public class TransactionController
 		this.clientThread = clientThread;
 		this.removeTransactionConsumer = id -> this.removeTransaction(id);
 
-		Supplier<JButton> renderExtraComponentSupplier = () -> {
-			return renderExtraComponent();
-		};
-		Consumer<Transaction> extraComponentPressedConsumer = (transaction) -> {
-			this.extraComponentPressed(transaction);
-		};
 		Consumer<Object> renderItemCallback = (Object sell) -> {
 			TransactionPanel transactionPanel = new TransactionPanel(
 				name,
@@ -85,17 +76,17 @@ public class TransactionController
 
 	public void addTransaction(Transaction transaction)
 	{
-		this.transactions.add(transaction);
+		this.transactions.add(0, transaction);
 		this.buildView();
 	}
 
 	public Transaction upsertTransaction(GrandExchangeOffer offer, int slot)
 	{
 
-		ListIterator<Transaction> transactionsIter = transactions.listIterator(transactions.size());
-		while (transactionsIter.hasPrevious())
+		ListIterator<Transaction> transactionsIter = transactions.listIterator();
+		while (transactionsIter.hasNext())
 		{
-			Transaction transaction = transactionsIter.previous();
+			Transaction transaction = transactionsIter.next();
 
 			if (GrandExchange.checkIsOfferPartOfTransaction(transaction, offer, slot))
 			{
@@ -115,10 +106,10 @@ public class TransactionController
 
 	public void removeTransaction(UUID id)
 	{
-		ListIterator<Transaction> transactionIter = this.transactions.listIterator(this.transactions.size());
-		while (transactionIter.hasPrevious())
+		Iterator<Transaction> transactionIter = this.transactions.iterator();
+		while (transactionIter.hasNext())
 		{
-			Transaction transaction = transactionIter.previous();
+			Transaction transaction = transactionIter.next();
 			if (transaction.id.equals(id))
 			{
 				transactionIter.remove();
@@ -128,28 +119,13 @@ public class TransactionController
 		}
 	}
 
-	public void extraComponentPressed(Transaction transaction)
-	{
-	}
-
-	;
-
-	public JButton renderExtraComponent()
-	{
-		return null;
-	}
-
 	public void loadTransactions() throws IOException
 	{
 	}
 
-	;
-
 	public void saveTransactions()
 	{
 	}
-
-	;
 
 	public TransactionPage getPage()
 	{
@@ -167,7 +143,7 @@ public class TransactionController
 		{
 			return true;
 		}
-		else if (this.searchText != null && this.searchText != "")
+		else if (this.searchText != null && !this.searchText.isEmpty())
 		{
 			return false;
 		}
@@ -177,9 +153,9 @@ public class TransactionController
 
 	public void filterList()
 	{
-		if (this.searchText == "" || this.searchText == null)
+		if (this.searchText == null || this.searchText.isEmpty())
 		{
-			this.filteredTransactions = this.transactions;
+			this.filteredTransactions = new ArrayList<>(this.transactions);
 		}
 		else
 		{
@@ -206,7 +182,7 @@ public class TransactionController
 				this.pagination.getComponent(this.filteredTransactions),
 				BorderLayout.SOUTH
 			);
-			this.pagination.renderList(this.filteredTransactions);
+			this.pagination.renderFromBeginning(this.filteredTransactions);
 		});
 	}
 }

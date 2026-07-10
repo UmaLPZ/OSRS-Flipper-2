@@ -8,15 +8,14 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -30,12 +29,12 @@ public class Persistor
 	public static final String SELLS_JSON_FILE = "flipper2-sells.json";
 	public static final String BUYS_JSON_FILE = "flipper2-buys.json";
 	public static final String FLIPS_JSON_FILE = "flipper2-flips.json";
+	private static final int FILE_VERSION = 2;
 
-	public static void setUp(String directoryPath) throws IOException
+	private static class ParsedFile
 	{
-		directory = new File(directoryPath);
-		createDirectory(directory);
-		createRequiredFiles();
+		JsonArray data;
+		boolean isLegacyFormat;
 	}
 
 	public static void setUp() throws IOException
@@ -82,8 +81,10 @@ public class Persistor
 	public static void saveJson(List<?> list, String filename) throws IOException
 	{
 		File file = new File(directory, filename);
-		final String json = gson.toJson(list);
-		Files.write(file.toPath(), json.getBytes());
+		JsonObject root = new JsonObject();
+		root.addProperty("version", FILE_VERSION);
+		root.add("data", gson.toJsonTree(list));
+		Files.write(file.toPath(), gson.toJson(root).getBytes());
 	}
 
 	private static String getFileContent(String filename) throws IOException
@@ -91,6 +92,66 @@ public class Persistor
 		Path filePath = Paths.get(directory.getAbsolutePath(), filename);
 		byte[] fileBytes = Files.readAllBytes(filePath);
 		return new String(fileBytes);
+	}
+
+	private static ParsedFile readFile(String filename) throws IOException
+	{
+		ParsedFile result = new ParsedFile();
+		String jsonString = getFileContent(filename);
+
+		if (jsonString == null || jsonString.trim().isEmpty())
+		{
+			result.data = new JsonArray();
+			result.isLegacyFormat = false;
+			return result;
+		}
+
+		JsonElement root = gson.fromJson(jsonString, JsonElement.class);
+
+		if (root == null || root.isJsonNull())
+		{
+			result.data = new JsonArray();
+			result.isLegacyFormat = false;
+		}
+		else if (root.isJsonArray())
+		{
+			result.data = root.getAsJsonArray();
+			result.isLegacyFormat = true;
+		}
+		else
+		{
+			JsonObject rootObj = root.getAsJsonObject();
+			result.data = rootObj.has("data") ? rootObj.get("data").getAsJsonArray() : new JsonArray();
+			result.isLegacyFormat = false;
+		}
+
+		return result;
+	}
+
+	private static Instant extractLegacyInstant(JsonObject obj, String field)
+	{
+		if (!obj.has(field) || obj.get(field).isJsonNull())
+		{
+			return null;
+		}
+
+		JsonElement element = obj.get(field);
+		if (element.isJsonPrimitive() && element.getAsJsonPrimitive().isString())
+		{
+			try
+			{
+				java.util.Date legacyDate = new Gson().fromJson(element, java.util.Date.class);
+				obj.remove(field);
+				return legacyDate != null ? legacyDate.toInstant() : null;
+			}
+			catch (Exception e)
+			{
+				obj.remove(field);
+				return null;
+			}
+		}
+
+		return null;
 	}
 
 	public static boolean saveBuys(List<Transaction> buys)
@@ -123,58 +184,25 @@ public class Persistor
 
 	public static List<Transaction> loadBuys() throws IOException
 	{
-		String jsonString = getFileContent(BUYS_JSON_FILE);
-		JsonArray jsonArray = gson.fromJson(jsonString, JsonArray.class);
-		List<Transaction> buys = new ArrayList<>();
-		if (jsonArray != null)
-		{
-			for (JsonElement element : jsonArray)
-			{
-				JsonObject obj = element.getAsJsonObject();
-				if (obj.has("quantity"))
-				{
-					obj.addProperty("finQuantity", obj.get("quantity").getAsInt());
-				}
-				if (obj.has("totalQuantity"))
-				{
-					obj.addProperty("initQuantity", obj.get("totalQuantity").getAsInt());
-				}
-
-				Transaction transaction = gson.fromJson(obj, Transaction.class);
-
-				if (obj.has("isFlipped") && obj.get("isFlipped").getAsBoolean() && !obj.has("flippedQuantity"))
-				{
-					transaction.setFlippedQuantity(transaction.getInitQuantity());
-				}
-
-				if (!transaction.isBuy())
-				{
-					transaction.setInitTaxPer(GrandExchange.calculateTaxPerItem(transaction.getItemId(), transaction.getInitPricePer(), transaction.getCreatedTime()));
-					transaction.setInitTax(transaction.getInitTaxPer() * transaction.getInitQuantity());
-
-					transaction.setFinTaxPer(GrandExchange.calculateTaxPerItem(transaction.getItemId(), transaction.getFinPricePer(), transaction.getCreatedTime()));
-					transaction.setFinTax(transaction.getFinTaxPer() * transaction.getFinQuantity());
-				}
-
-				transaction.setInitTotal(((long) transaction.getInitPricePer() * transaction.getInitQuantity()) - transaction.getInitTax());
-				transaction.setFinTotal(((long) transaction.getFinPricePer() * transaction.getFinQuantity()) - transaction.getFinTax());
-
-				buys.add(transaction);
-			}
-		}
-		return buys;
+		return loadTransactions(BUYS_JSON_FILE);
 	}
 
 	public static List<Transaction> loadSells() throws IOException
 	{
-		String jsonString = getFileContent(SELLS_JSON_FILE);
-		JsonArray jsonArray = gson.fromJson(jsonString, JsonArray.class);
-		List<Transaction> sells = new ArrayList<>();
-		if (jsonArray != null)
+		return loadTransactions(SELLS_JSON_FILE);
+	}
+
+	private static List<Transaction> loadTransactions(String filename) throws IOException
+	{
+		ParsedFile parsed = readFile(filename);
+		List<Transaction> transactions = new ArrayList<>();
+
+		for (JsonElement element : parsed.data)
 		{
-			for (JsonElement element : jsonArray)
+			JsonObject obj = element.getAsJsonObject();
+
+			if (parsed.isLegacyFormat)
 			{
-				JsonObject obj = element.getAsJsonObject();
 				if (obj.has("quantity"))
 				{
 					obj.addProperty("finQuantity", obj.get("quantity").getAsInt());
@@ -183,12 +211,15 @@ public class Persistor
 				{
 					obj.addProperty("initQuantity", obj.get("totalQuantity").getAsInt());
 				}
+			}
 
-				Transaction transaction = gson.fromJson(obj, Transaction.class);
+			Transaction transaction = gson.fromJson(obj, Transaction.class);
 
+			if (parsed.isLegacyFormat)
+			{
 				if (obj.has("isFlipped") && obj.get("isFlipped").getAsBoolean() && !obj.has("flippedQuantity"))
 				{
-					transaction.setFlippedQuantity(transaction.getInitQuantity());
+					transaction.setFlippedQuantity(transaction.getFinQuantity());
 				}
 
 				if (!transaction.isBuy())
@@ -202,11 +233,17 @@ public class Persistor
 
 				transaction.setInitTotal(((long) transaction.getInitPricePer() * transaction.getInitQuantity()) - transaction.getInitTax());
 				transaction.setFinTotal(((long) transaction.getFinPricePer() * transaction.getFinQuantity()) - transaction.getFinTax());
-
-				sells.add(transaction);
 			}
+
+			transactions.add(transaction);
 		}
-		return sells;
+
+		if (parsed.isLegacyFormat)
+		{
+			Collections.reverse(transactions);
+		}
+
+		return transactions;
 	}
 
 	public static boolean saveFlips(List<Flip> flips)
@@ -225,17 +262,39 @@ public class Persistor
 
 	public static List<Flip> loadFlips() throws IOException
 	{
-		String jsonString = getFileContent(FLIPS_JSON_FILE);
-		JsonArray jsonArray = gson.fromJson(jsonString, JsonArray.class);
+		ParsedFile parsed = readFile(FLIPS_JSON_FILE);
 		List<Flip> flips = new ArrayList<>();
-		if (jsonArray != null)
-		{
-			for (JsonElement element : jsonArray)
-			{
-				JsonObject obj = element.getAsJsonObject();
-				Flip flip = gson.fromJson(obj, Flip.class);
 
-				int taxPerItem = GrandExchange.calculateTaxPerItem(flip.getItemId(), flip.getSellPrice(), flip.getCreatedAt().toInstant());
+		for (JsonElement element : parsed.data)
+		{
+			JsonObject obj = element.getAsJsonObject();
+			Flip flip;
+
+			if (parsed.isLegacyFormat)
+			{
+				Instant legacyCreatedAt = extractLegacyInstant(obj, "createdAt");
+				Instant legacyUpdatedAt = extractLegacyInstant(obj, "updatedAt");
+
+				flip = gson.fromJson(obj, Flip.class);
+
+				if (legacyCreatedAt != null)
+				{
+					flip.setCreatedAt(legacyCreatedAt);
+				}
+				if (legacyUpdatedAt != null)
+				{
+					flip.setUpdatedAt(legacyUpdatedAt);
+				}
+				if (flip.getCreatedAt() == null)
+				{
+					flip.setCreatedAt(Instant.now());
+				}
+				if (flip.getUpdatedAt() == null)
+				{
+					flip.setUpdatedAt(flip.getCreatedAt());
+				}
+
+				int taxPerItem = GrandExchange.calculateTaxPerItem(flip.getItemId(), flip.getSellPrice(), flip.getCreatedAt());
 				flip.setTax(taxPerItem * flip.getQuantity());
 				flip.setTaxPerItem(taxPerItem);
 
@@ -244,10 +303,24 @@ public class Persistor
 				flip.setTotalProfit(flip.getTotalSell() - flip.getTotalBuy() - flip.getTax());
 				flip.setProfitPerItem(flip.getQuantity() > 0 ? (int) (flip.getTotalProfit() / flip.getQuantity()) : 0);
 				flip.setMarginCheck(flip.getQuantity() == 1 && flip.getBuyPrice() >= flip.getSellPrice());
-
-				flips.add(flip);
 			}
+			else
+			{
+				flip = gson.fromJson(obj, Flip.class);
+
+				if (flip.getCreatedAt() == null)
+				{
+					flip.setCreatedAt(Instant.now());
+				}
+				if (flip.getUpdatedAt() == null)
+				{
+					flip.setUpdatedAt(flip.getCreatedAt());
+				}
+			}
+
+			flips.add(flip);
 		}
+
 		return flips;
 	}
 }

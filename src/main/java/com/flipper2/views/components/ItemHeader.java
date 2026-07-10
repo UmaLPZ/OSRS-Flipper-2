@@ -11,7 +11,6 @@ import java.awt.Component;
 import java.awt.Color;
 import java.awt.Dimension;
 
-import com.flipper2.helpers.Numbers;
 import com.flipper2.helpers.UiUtilities;
 
 import static com.flipper2.helpers.UiUtilities.truncateString;
@@ -30,22 +29,18 @@ public class ItemHeader extends JPanel
 {
 	private ItemManager itemManager;
 	private int itemId;
-	private int pricePer;
 	private String itemName;
 	private JPanel topRightContainer;
-	private JLabel costPerLabel;
 
 	public ItemHeader(
 		int itemId,
 		int pricePer,
 		String itemName,
 		ItemManager itemManager,
-		boolean isAddCostPer,
 		JButton hoverButton
 	)
 	{
 		this.itemId = itemId;
-		this.pricePer = pricePer;
 		this.itemName = itemName;
 		this.itemManager = itemManager;
 		this.setLayout(new BorderLayout());
@@ -54,11 +49,6 @@ public class ItemHeader extends JPanel
 
 		JPanel itemIconPanel = constructItemIcon();
 		JLabel itemNameLabel = constructItemName();
-		if (isAddCostPer)
-		{
-			this.costPerLabel = constructCostPerLabel();
-			topRightContainer.add(costPerLabel);
-		}
 
 		hoverButton.setVisible(false);
 		topRightContainer.add(hoverButton);
@@ -75,19 +65,11 @@ public class ItemHeader extends JPanel
 			public void mouseEntered(MouseEvent me)
 			{
 				hoverButton.setVisible(true);
-				if (isAddCostPer)
-				{
-					costPerLabel.setVisible(false);
-				}
 			}
 
 			@Override
 			public void mouseExited(MouseEvent me)
 			{
-				if (isAddCostPer)
-				{
-					costPerLabel.setVisible(true);
-				}
 				hoverButton.setVisible(false);
 			}
 		});
@@ -98,19 +80,11 @@ public class ItemHeader extends JPanel
 			public void mouseEntered(MouseEvent me)
 			{
 				hoverButton.setVisible(true);
-				if (isAddCostPer)
-				{
-					costPerLabel.setVisible(false);
-				}
 			}
 
 			@Override
 			public void mouseExited(MouseEvent me)
 			{
-				if (isAddCostPer)
-				{
-					costPerLabel.setVisible(true);
-				}
 				hoverButton.setVisible(false);
 			}
 		});
@@ -140,13 +114,5 @@ public class ItemHeader extends JPanel
 		itemName.setPreferredSize(new Dimension(0, 0));
 		itemName.setToolTipText(this.itemName);
 		return itemName;
-	}
-
-	private JLabel constructCostPerLabel()
-	{
-		String costPerString = Numbers.numberWithCommas(this.pricePer);
-		JLabel costPerLabel = new JLabel(costPerString + " gp");
-		costPerLabel.setForeground(ColorScheme.GRAND_EXCHANGE_ALCH);
-		return costPerLabel;
 	}
 }
