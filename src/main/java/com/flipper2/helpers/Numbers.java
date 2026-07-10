@@ -1,6 +1,5 @@
 package com.flipper2.helpers;
 
-import java.math.BigInteger;
 import java.text.NumberFormat;
 
 public class Numbers
@@ -10,20 +9,9 @@ public class Numbers
 		return NumberFormat.getIntegerInstance().format(number);
 	}
 
-	public static String numberWithCommas(String number)
-	{
-		if (number == "0")
-		{
-			return "0";
-		}
-
-		BigInteger numberAsBigInt = new BigInteger(number);
-		return String.format("%,d", numberAsBigInt);
-	}
-
 	/**
 	 * Shortens a number for display, adding "K", "M", or "B" suffixes as appropriate,
-	 * rounding to one decimal place, and omitting the decimal if it's .0.
+	 * rounding to two decimal places, and omitting trailing zero decimals.
 	 * Correctly handles negative numbers.
 	 *
 	 * @param number The number to shorten.
@@ -46,29 +34,39 @@ public class Numbers
 
 		if (number < 1000000)
 		{
-			shortNumber = number / 1000.0;
+			shortNumber = Math.round((number / 1000.0) * 100.0) / 100.0;
 			suffix = "K";
+			if (shortNumber >= 1000)
+			{
+				shortNumber = shortNumber / 1000.0;
+				suffix = "M";
+			}
 		}
 		else if (number < 1000000000)
 		{
-			shortNumber = number / 1000000.0;
+			shortNumber = Math.round((number / 1000000.0) * 100.0) / 100.0;
 			suffix = "M";
+			if (shortNumber >= 1000)
+			{
+				shortNumber = shortNumber / 1000.0;
+				suffix = "B";
+			}
 		}
 		else
 		{
-			shortNumber = number / 1000000000.0;
+			shortNumber = Math.round((number / 1000000000.0) * 100.0) / 100.0;
 			suffix = "B";
 		}
 
-		shortNumber = Math.round(shortNumber * 10.0) / 10.0;
+		shortNumber = Math.round(shortNumber * 100.0) / 100.0;
 
-		if (shortNumber == (int) shortNumber)
+		String formatted = String.format("%.2f", shortNumber);
+		if (formatted.contains("."))
 		{
-			return String.format("%s%d%s", sign, (int) shortNumber, suffix);
+			formatted = formatted.replaceAll("0+$", "");
+			formatted = formatted.replaceAll("\\.$", "");
 		}
-		else
-		{
-			return String.format("%s%.1f%s", sign, shortNumber, suffix);
-		}
+
+		return sign + formatted + suffix;
 	}
 }

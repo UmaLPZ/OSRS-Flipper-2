@@ -16,27 +16,27 @@ import com.flipper2.helpers.GrandExchange;
 public class Transaction
 {
 	public final UUID id;
-	private int finQuantity;
-	private int initQuantity;
 	private int itemId;
-	private int finPricePer;
-	private int initPricePer;
-	private int slot;
 	private String itemName;
 	private boolean isBuy;
 	private boolean isComplete;
-	private boolean isFlipped;
-	private int flippedQuantity;
-	private int finTax;
+	private int slot;
+	private int initQuantity;
+	private int finQuantity;
+	private int initPricePer;
+	private int finPricePer;
+	private int initTaxPer;
 	private int initTax;
 	private int finTaxPer;
-	private int initTaxPer;
+	private int finTax;
 	private long initTotal;
 	private long finTotal;
-	private Instant completedTime;
-	private Instant createdTime;
+	private boolean isFlipped;
+	private int flippedQuantity;
 	private boolean hasCancelledOnce = false;
 	private GrandExchangeOfferState currentState;
+	private Instant createdTime;
+	private Instant completedTime;
 
 	public Transaction(
 		int finQuantity,
@@ -132,10 +132,5 @@ public class Transaction
 	public void setIsFlipped(boolean isFlipped)
 	{
 		this.isFlipped = isFlipped;
-	}
-
-	public int calculateTax(int pricePer)
-	{
-		return GrandExchange.calculateTaxPerItem(this.itemId, pricePer, this.createdTime);
 	}
 }

@@ -275,11 +275,4 @@ public class InProgressPanel extends JPanel
 		Dimension preferredSize = super.getPreferredSize();
 		return new Dimension(container.getPreferredSize().width, preferredSize.height);
 	}
-
-	public void reset()
-	{
-		container.removeAll();
-		revalidate();
-		repaint();
-	}
 }

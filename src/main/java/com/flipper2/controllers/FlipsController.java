@@ -1,7 +1,6 @@
 package com.flipper2.controllers;
 
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -170,29 +169,6 @@ public class FlipsController
 		return String.valueOf(total);
 	}
 
-	private void updateFlip(Transaction sell, Transaction buy, Flip flip)
-	{
-		flip.setSellPrice(sell.getFinPricePer());
-		flip.setBuyPrice(buy.getFinPricePer());
-		flip.setQuantity(sell.getFinQuantity());
-		flip.setItemId(sell.getItemId());
-		flip.setItemName(sell.getItemName());
-
-		flip.setTax(sell.getFinTax());
-		flip.setTaxPerItem(flip.getQuantity() > 0 ? flip.getTax() / flip.getQuantity() : 0);
-
-		flip.setTotalBuy((long) flip.getBuyPrice() * flip.getQuantity());
-		flip.setTotalSell((long) flip.getSellPrice() * flip.getQuantity());
-		flip.setTotalProfit(flip.getTotalSell() - flip.getTotalBuy() - flip.getTax());
-		flip.setProfitPerItem(flip.getQuantity() > 0 ? (int) (flip.getTotalProfit() / flip.getQuantity()) : 0);
-
-		flip.setMarginCheck(flip.getQuantity() == 1 && flip.getBuyPrice() >= flip.getSellPrice());
-
-		this.totalProfit = calculateTotalProfit(flips);
-		Persistor.saveFlips(this.flips);
-		getFlipNamesAndBuild();
-	}
-
 	private boolean isRender(Flip flip)
 	{
 
@@ -241,9 +217,9 @@ public class FlipsController
 	 * Potentially creates a flip if the sell is complete and has a corresponding
 	 * buy.
 	 */
-	public Flip upsertFlip(Transaction sell, List<Transaction> buys)
+	public void upsertFlip(Transaction sell, List<Transaction> buys)
 	{
-		if (sell.isBuy()) return null;
+		if (sell.isBuy()) return;
 
 		if (sell.isFlipped())
 		{
@@ -254,34 +230,26 @@ public class FlipsController
 		if (this.isTrackingFlips)
 		{
 			int remainingToFlip = sell.getFinQuantity();
-			ListIterator<Transaction> buysIterator = buys.listIterator(buys.size());
+			ListIterator<Transaction> buysIterator = buys.listIterator();
 
-			while (buysIterator.hasPrevious() && remainingToFlip > 0)
+			while (buysIterator.hasNext() && remainingToFlip > 0)
 			{
-				Transaction buy = buysIterator.previous();
+				Transaction buy = buysIterator.next();
 
 				if (GrandExchange.checkIsSellAFlipOfBuy(sell, buy))
 				{
-					int availableInBuy = buy.getInitQuantity() - buy.getFlippedQuantity();
+					int availableInBuy = buy.getFinQuantity() - buy.getFlippedQuantity();
 					int amountToTake = Math.min(remainingToFlip, availableInBuy);
 
 					if (amountToTake > 0)
 					{
-						Flip flip = new Flip(buy, sell);
-
-						flip.setQuantity(amountToTake);
-						flip.setTax(sell.getFinTaxPer() * amountToTake);
-						flip.setTaxPerItem(sell.getFinTaxPer());
-						flip.setTotalBuy((long) buy.getFinPricePer() * amountToTake);
-						flip.setTotalSell((long) sell.getFinPricePer() * amountToTake);
-						flip.setTotalProfit(flip.getTotalSell() - flip.getTotalBuy() - flip.getTax());
-						flip.setProfitPerItem(sell.getFinPricePer() - buy.getFinPricePer() - sell.getFinTaxPer());
-						flip.setMarginCheck(amountToTake == 1 && buy.getFinPricePer() >= sell.getFinPricePer());
+						// Pass 'amountToTake' directly to the constructor
+						Flip flip = new Flip(buy, sell, amountToTake);
 
 						this.addFlip(flip);
 
 						buy.setFlippedQuantity(buy.getFlippedQuantity() + amountToTake);
-						if (buy.getFlippedQuantity() >= buy.getInitQuantity())
+						if (buy.getFlippedQuantity() >= buy.getFinQuantity()) // Also fixed: initQuantity -> finQuantity
 						{
 							buy.setIsFlipped(true);
 						}
@@ -295,8 +263,6 @@ public class FlipsController
 				sell.setIsFlipped(true);
 			}
 		}
-
-		return null;
 	}
 
 	public void filterList()
@@ -344,7 +310,6 @@ public class FlipsController
 
 	public void repairFlips(List<Transaction> allBuys, List<Transaction> allSells)
 	{
-		// 1. Cache existing dates and IDs
 		Map<UUID, Flip> oldFlipsMap = new HashMap<>();
 		for (Flip f : this.flips)
 		{
@@ -362,29 +327,31 @@ public class FlipsController
 		for (Transaction s : allSells)
 		{
 			s.setIsFlipped(false);
+			s.setFlippedQuantity(0);
 		}
 
-		allSells.sort((a, b) -> a.getCreatedTime().compareTo(b.getCreatedTime()));
+		List<Transaction> sortedSellsForMatching = new ArrayList<>(allSells);
+		sortedSellsForMatching.sort((a, b) -> a.getCreatedTime().compareTo(b.getCreatedTime()));
 
-		for (Transaction sell : allSells)
+		for (Transaction sell : sortedSellsForMatching)
 		{
 			if (sell.isBuy()) continue;
 
 			int remainingToFlip = sell.getFinQuantity();
-			for (int i = allBuys.size() - 1; i >= 0 && remainingToFlip > 0; i--)
+			for (int i = 0; i < allBuys.size() && remainingToFlip > 0; i++)
 			{
 				Transaction buy = allBuys.get(i);
 
 				if (GrandExchange.checkIsSellAFlipOfBuy(sell, buy))
 				{
-					int availableInBuy = buy.getInitQuantity() - buy.getFlippedQuantity();
+					int availableInBuy = buy.getFinQuantity() - buy.getFlippedQuantity();
 					int amountToTake = Math.min(remainingToFlip, availableInBuy);
 
 					if (amountToTake > 0)
 					{
-						Flip flip = new Flip(buy, sell);
 
-						// Re-apply original Metadata if it exists
+						Flip flip = new Flip(buy, sell, amountToTake);
+
 						if (oldFlipsMap.containsKey(sell.getId()))
 						{
 							Flip old = oldFlipsMap.get(sell.getId());
@@ -393,19 +360,10 @@ public class FlipsController
 							flip.setUpdatedAt(old.getUpdatedAt());
 						}
 
-						flip.setQuantity(amountToTake);
-						flip.setTax(sell.getFinTaxPer() * amountToTake);
-						flip.setTaxPerItem(sell.getFinTaxPer());
-						flip.setTotalBuy((long) buy.getFinPricePer() * amountToTake);
-						flip.setTotalSell((long) sell.getFinPricePer() * amountToTake);
-						flip.setTotalProfit(flip.getTotalSell() - flip.getTotalBuy() - flip.getTax());
-						flip.setProfitPerItem(sell.getFinPricePer() - buy.getFinPricePer() - sell.getFinTaxPer());
-						flip.setMarginCheck(amountToTake == 1 && buy.getFinPricePer() >= sell.getFinPricePer());
-
 						this.flips.add(0, flip);
 
 						buy.setFlippedQuantity(buy.getFlippedQuantity() + amountToTake);
-						if (buy.getFlippedQuantity() >= buy.getInitQuantity())
+						if (buy.getFlippedQuantity() >= buy.getFinQuantity())
 						{
 							buy.setIsFlipped(true);
 						}

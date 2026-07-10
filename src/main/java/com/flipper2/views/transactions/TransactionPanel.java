@@ -84,7 +84,6 @@ public class TransactionPanel extends JPanel
 			transaction.getFinPricePer(),
 			transaction.getItemName(),
 			itemManager,
-			false,
 			deleteTransactionButton
 		);
 		container.add(itemHeader, BorderLayout.NORTH);

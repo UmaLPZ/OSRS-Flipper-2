@@ -1,6 +1,6 @@
 package com.flipper2.models;
 
-import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.UUID;
 
 import lombok.Data;
@@ -13,8 +13,6 @@ import com.flipper2.helpers.GrandExchange;
 public class Flip
 {
 	public UUID flipId;
-	public int tax;
-	public int taxPerItem;
 	public UUID buyId;
 	public UUID sellId;
 	public int itemId;
@@ -22,26 +20,29 @@ public class Flip
 	public int quantity;
 	public int buyPrice;
 	public int sellPrice;
+	public int tax;
+	public int taxPerItem;
 	public long totalBuy;
 	public long totalSell;
-	public int profitPerItem;
 	public long totalProfit;
+	public int profitPerItem;
 	public boolean isMarginCheck;
-	private Timestamp updatedAt;
-	private Timestamp createdAt;
+	private Instant createdAt;
+	private Instant updatedAt;
 
 	public Flip()
 	{
 	}
 
-	public Flip(Transaction buy, Transaction sell)
+	public Flip(Transaction buy, Transaction sell, int flipQuantity)
 	{
 		this.flipId = UUID.randomUUID();
 		this.buyId = buy.id;
 		this.sellId = sell.id;
 		this.itemId = sell.getItemId();
 		this.itemName = sell.getItemName();
-		this.quantity = sell.getFinQuantity();
+
+		this.quantity = flipQuantity;
 		this.buyPrice = buy.getFinPricePer();
 		this.sellPrice = sell.getFinPricePer();
 
@@ -55,19 +56,13 @@ public class Flip
 
 		this.isMarginCheck = this.quantity == 1 && this.buyPrice >= this.sellPrice;
 
-		// Default to Sell time (used if this is a newly discovered "missed" flip)
-		this.updatedAt = new Timestamp(sell.getCreatedTime().toEpochMilli());
-		this.createdAt = new Timestamp(sell.getCreatedTime().toEpochMilli());
+		this.createdAt = sell.getCreatedTime();
+		this.updatedAt = sell.getCreatedTime();
 	}
 
 	public String describeFlip()
 	{
 		return String.valueOf(quantity) + " " + this.itemName + "(s)";
-	}
-
-	public int getTax()
-	{
-		return this.taxPerItem;
 	}
 
 	public int getTotalTax()

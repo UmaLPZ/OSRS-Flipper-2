@@ -62,7 +62,6 @@ public class FlipPanel extends JPanel
 			flip.getSellPrice(),
 			flip.getItemName(),
 			itemManager,
-			false,
 			deleteFlipButton
 		);
 		container.add(itemHeader, BorderLayout.NORTH);
@@ -175,15 +174,15 @@ public class FlipPanel extends JPanel
 		sellColPanel.add(sellColLabel, BorderLayout.WEST);
 		labelPanel.add(sellColPanel);
 
-		JPanel profitColPanel = new CustomPanel(new BorderLayout(), true);
-		JLabel profitColLabel = newLeftLabel("Profit:");
-		profitColPanel.add(profitColLabel, BorderLayout.WEST);
-		labelPanel.add(profitColPanel);
-
 		JPanel taxColPanel = new CustomPanel(new BorderLayout(), true);
 		JLabel taxColLabel = newLeftLabel("Tax:");
 		taxColPanel.add(taxColLabel, BorderLayout.WEST);
 		labelPanel.add(taxColPanel);
+
+		JPanel profitColPanel = new CustomPanel(new BorderLayout(), true);
+		JLabel profitColLabel = newLeftLabel("Profit:");
+		profitColPanel.add(profitColLabel, BorderLayout.WEST);
+		labelPanel.add(profitColPanel);
 
 		labelColumn.add(labelPanel, BorderLayout.CENTER);
 
@@ -207,6 +206,13 @@ public class FlipPanel extends JPanel
 		sellPerPricePanel.add(sellPerPriceValue, BorderLayout.CENTER);
 		contentPanel1.add(sellPerPricePanel);
 
+		JPanel taxPerPanel = new CustomPanel(new BorderLayout(), true);
+		int taxPer = flip.getTaxPerItem();
+		JLabel taxPerValue = newRightLabel(Numbers.toShortNumber(taxPer), ColorScheme.PROGRESS_ERROR_COLOR);
+		taxPerValue.setToolTipText(Numbers.numberWithCommas(taxPer));
+		taxPerPanel.add(taxPerValue, BorderLayout.CENTER);
+		contentPanel1.add(taxPerPanel);
+
 		JPanel profitPerPanel = new CustomPanel(new BorderLayout(), true);
 		int profitPer = flip.getProfitPerItem();
 		Color profitPerColor = flip.getTotalProfit() > 0 ? ColorScheme.GRAND_EXCHANGE_ALCH : ColorScheme.PROGRESS_ERROR_COLOR;
@@ -214,13 +220,6 @@ public class FlipPanel extends JPanel
 		profitPerValue.setToolTipText(Numbers.numberWithCommas(profitPer));
 		profitPerPanel.add(profitPerValue, BorderLayout.CENTER);
 		contentPanel1.add(profitPerPanel);
-
-		JPanel taxPerPanel = new CustomPanel(new BorderLayout(), true);
-		int taxPer = flip.getTaxPerItem();
-		JLabel taxPerValue = newRightLabel(Numbers.toShortNumber(taxPer), ColorScheme.PROGRESS_ERROR_COLOR);
-		taxPerValue.setToolTipText(Numbers.numberWithCommas(taxPer));
-		taxPerPanel.add(taxPerValue, BorderLayout.CENTER);
-		contentPanel1.add(taxPerPanel);
 
 		column1.add(contentPanel1, BorderLayout.CENTER);
 
@@ -244,6 +243,13 @@ public class FlipPanel extends JPanel
 		sellTotalPanel.add(sellTotalValueLabel, BorderLayout.CENTER);
 		contentPanel2.add(sellTotalPanel);
 
+		JPanel totalTaxPanel = new CustomPanel(new BorderLayout(), true);
+		int totalTaxValue = flip.getTotalTax();
+		JLabel totalTaxValueLabel = newRightLabel(Numbers.toShortNumber(totalTaxValue), ColorScheme.PROGRESS_ERROR_COLOR);
+		totalTaxValueLabel.setToolTipText(Numbers.numberWithCommas(totalTaxValue));
+		totalTaxPanel.add(totalTaxValueLabel, BorderLayout.CENTER);
+		contentPanel2.add(totalTaxPanel);
+
 		JPanel totalProfitPanel = new CustomPanel(new BorderLayout(), true);
 		long totalProfitValue = flip.getTotalProfit();
 		Color profitColor = totalProfitValue > 0 ? ColorScheme.GRAND_EXCHANGE_ALCH : ColorScheme.PROGRESS_ERROR_COLOR;
@@ -251,13 +257,6 @@ public class FlipPanel extends JPanel
 		totalProfitValueLabel.setToolTipText(Numbers.numberWithCommas((int) totalProfitValue));
 		totalProfitPanel.add(totalProfitValueLabel, BorderLayout.CENTER);
 		contentPanel2.add(totalProfitPanel);
-
-		JPanel totalTaxPanel = new CustomPanel(new BorderLayout(), true);
-		int totalTaxValue = flip.getTotalTax();
-		JLabel totalTaxValueLabel = newRightLabel(Numbers.toShortNumber(totalTaxValue), ColorScheme.PROGRESS_ERROR_COLOR);
-		totalTaxValueLabel.setToolTipText(Numbers.numberWithCommas(totalTaxValue));
-		totalTaxPanel.add(totalTaxValueLabel, BorderLayout.CENTER);
-		contentPanel2.add(totalTaxPanel);
 
 		column2.add(contentPanel2, BorderLayout.CENTER);
 
