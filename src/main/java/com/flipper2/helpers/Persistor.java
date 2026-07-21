@@ -3,6 +3,7 @@ package com.flipper2.helpers;
 import com.flipper2.models.Flip;
 import com.flipper2.models.Transaction;
 
+import net.runelite.api.GrandExchangeOfferState;
 import net.runelite.client.RuneLite;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -217,9 +218,25 @@ public class Persistor
 
 			if (parsed.isLegacyFormat)
 			{
+
 				if (obj.has("isFlipped") && obj.get("isFlipped").getAsBoolean() && !obj.has("flippedQuantity"))
 				{
 					transaction.setFlippedQuantity(transaction.getFinQuantity());
+				}
+
+				boolean completedFull = transaction.getFinQuantity() == transaction.getInitQuantity();
+				if (transaction.isBuy())
+				{
+					transaction.setCurrentState(completedFull ? GrandExchangeOfferState.BOUGHT : GrandExchangeOfferState.CANCELLED_BUY);
+				}
+				else
+				{
+					transaction.setCurrentState(completedFull ? GrandExchangeOfferState.SOLD : GrandExchangeOfferState.CANCELLED_SELL);
+				}
+
+				if (transaction.getCompletedTime() == null && transaction.isComplete())
+				{
+					transaction.setCompletedTime(transaction.getCreatedTime());
 				}
 
 				if (!transaction.isBuy())

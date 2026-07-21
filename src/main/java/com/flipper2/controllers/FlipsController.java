@@ -49,6 +49,9 @@ public class FlipsController
 	private boolean isTrackingFlips = true;
 	private ClientThread cThread;
 
+
+	private Consumer<Flip> onFlipRemovedCallback;
+
 	public FlipsController(ItemManager itemManager, FlipperConfig config, ClientThread cThread) throws IOException
 	{
 		this.itemManager = itemManager;
@@ -57,13 +60,11 @@ public class FlipsController
 		this.refreshFlipsRunnable = () -> this.loadFlips();
 		this.onSearchTextChangedCallback = (searchText) -> this.onSearchTextChanged(searchText);
 
-
 		this.flipPage = new FlipPage(
 			this.onSearchTextChangedCallback,
 			this::toggleIsTrackingFlips,
 			this.isTrackingFlips
 		);
-
 
 		Consumer<Object> renderItemCallback = (Object flip) -> {
 			FlipPanel flipPanel = new FlipPanel(
@@ -79,6 +80,11 @@ public class FlipsController
 
 		this.pagination = new Pagination(renderItemCallback, UiUtilities.ITEMS_PER_PAGE, buildViewCallback);
 		this.loadFlips();
+	}
+
+	public void setOnFlipRemovedCallback(Consumer<Flip> callback)
+	{
+		this.onFlipRemovedCallback = callback;
 	}
 
 	private void toggleIsTrackingFlips()
@@ -104,7 +110,6 @@ public class FlipsController
 		}
 	}
 
-
 	public void removeFlip(UUID flipId)
 	{
 		Iterator<Flip> flipsIter = this.flips.iterator();
@@ -116,6 +121,13 @@ public class FlipsController
 				flipsIter.remove();
 				this.totalProfit = calculateTotalProfit(flips);
 				Persistor.saveFlips(this.flips);
+
+
+				if (this.onFlipRemovedCallback != null)
+				{
+					this.onFlipRemovedCallback.accept(flip);
+				}
+
 				this.buildView();
 				return;
 			}
@@ -158,7 +170,6 @@ public class FlipsController
 		});
 	}
 
-
 	private String calculateTotalProfit(List<Flip> flipList)
 	{
 		long total = 0;
@@ -171,7 +182,6 @@ public class FlipsController
 
 	private boolean isRender(Flip flip)
 	{
-
 		if (flip.getItemName() == null)
 		{
 			ItemComposition itemComp = itemManager.getItemComposition(flip.getItemId());
@@ -213,10 +223,6 @@ public class FlipsController
 		}
 	}
 
-	/**
-	 * Potentially creates a flip if the sell is complete and has a corresponding
-	 * buy.
-	 */
 	public void upsertFlip(Transaction sell, List<Transaction> buys)
 	{
 		if (sell.isBuy()) return;
@@ -243,13 +249,11 @@ public class FlipsController
 
 					if (amountToTake > 0)
 					{
-						// Pass 'amountToTake' directly to the constructor
 						Flip flip = new Flip(buy, sell, amountToTake);
-
 						this.addFlip(flip);
 
 						buy.setFlippedQuantity(buy.getFlippedQuantity() + amountToTake);
-						if (buy.getFlippedQuantity() >= buy.getFinQuantity()) // Also fixed: initQuantity -> finQuantity
+						if (buy.getFlippedQuantity() >= buy.getFinQuantity())
 						{
 							buy.setIsFlipped(true);
 						}
@@ -273,7 +277,6 @@ public class FlipsController
 		}
 		else
 		{
-
 			this.filteredFlips = new ArrayList<>();
 			for (Flip flip : this.flips)
 			{
@@ -287,7 +290,6 @@ public class FlipsController
 
 	public void buildView()
 	{
-
 		SwingUtilities.invokeLater(() -> {
 			this.filterList();
 			this.flipPage.resetContainer(isTrackingFlips);
@@ -310,10 +312,12 @@ public class FlipsController
 
 	public void repairFlips(List<Transaction> allBuys, List<Transaction> allSells)
 	{
-		Map<UUID, Flip> oldFlipsMap = new HashMap<>();
+
+		Map<String, Flip> oldFlipsMap = new HashMap<>();
 		for (Flip f : this.flips)
 		{
-			oldFlipsMap.put(f.getSellId(), f);
+			String uniqueKey = f.getBuyId().toString() + "_" + f.getSellId().toString();
+			oldFlipsMap.put(uniqueKey, f);
 		}
 
 		this.flips.clear();
@@ -341,23 +345,37 @@ public class FlipsController
 			for (int i = 0; i < allBuys.size() && remainingToFlip > 0; i++)
 			{
 				Transaction buy = allBuys.get(i);
+				String uniqueKey = buy.getId().toString() + "_" + sell.getId().toString();
+				boolean isHistoricalFlip = oldFlipsMap.containsKey(uniqueKey);
 
-				if (GrandExchange.checkIsSellAFlipOfBuy(sell, buy))
+
+				if (isHistoricalFlip || GrandExchange.checkIsSellAFlipOfBuy(sell, buy))
 				{
 					int availableInBuy = buy.getFinQuantity() - buy.getFlippedQuantity();
 					int amountToTake = Math.min(remainingToFlip, availableInBuy);
 
 					if (amountToTake > 0)
 					{
-
 						Flip flip = new Flip(buy, sell, amountToTake);
 
-						if (oldFlipsMap.containsKey(sell.getId()))
+
+						if (isHistoricalFlip)
 						{
-							Flip old = oldFlipsMap.get(sell.getId());
+							Flip old = oldFlipsMap.get(uniqueKey);
 							flip.setFlipId(old.getFlipId());
-							flip.setCreatedAt(old.getCreatedAt());
-							flip.setUpdatedAt(old.getUpdatedAt());
+
+
+							long timeDifferenceSeconds = Math.abs(old.getCreatedAt().getEpochSecond() - sell.getCreatedTime().getEpochSecond());
+							if (timeDifferenceSeconds <= 86400)
+							{
+								flip.setCreatedAt(old.getCreatedAt());
+								flip.setUpdatedAt(old.getUpdatedAt());
+							}
+							else
+							{
+								flip.setCreatedAt(sell.getCreatedTime());
+								flip.setUpdatedAt(sell.getCreatedTime());
+							}
 						}
 
 						this.flips.add(0, flip);
@@ -379,7 +397,12 @@ public class FlipsController
 
 		this.totalProfit = calculateTotalProfit(this.flips);
 		this.filteredFlips = new ArrayList<>(this.flips);
+
+
 		Persistor.saveFlips(this.flips);
+		Persistor.saveBuys(allBuys);
+		Persistor.saveSells(allSells);
+
 		getFlipNamesAndBuild();
 	}
 
