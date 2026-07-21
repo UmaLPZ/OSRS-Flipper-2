@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.UUID;
 
 import lombok.Data;
-import com.flipper2.helpers.GrandExchange;
 
 /**
  * Represents a buy and sell (flip) of an item
@@ -46,13 +45,13 @@ public class Flip
 		this.buyPrice = buy.getFinPricePer();
 		this.sellPrice = sell.getFinPricePer();
 
-		this.tax = sell.getFinTax();
-		this.taxPerItem = this.quantity > 0 ? this.tax / this.quantity : 0;
+		this.taxPerItem = sell.getFinTaxPer();
+		this.tax = this.taxPerItem * this.quantity;
 
 		this.totalBuy = (long) this.buyPrice * this.quantity;
 		this.totalSell = (long) this.sellPrice * this.quantity;
 		this.totalProfit = this.totalSell - this.totalBuy - this.tax;
-		this.profitPerItem = this.quantity > 0 ? (int) (this.totalProfit / this.quantity) : 0;
+		this.profitPerItem = this.sellPrice - this.buyPrice - this.taxPerItem;
 
 		this.isMarginCheck = this.quantity == 1 && this.buyPrice >= this.sellPrice;
 
