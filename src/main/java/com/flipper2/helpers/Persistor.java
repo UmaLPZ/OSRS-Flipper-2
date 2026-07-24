@@ -3,7 +3,6 @@ package com.flipper2.helpers;
 import com.flipper2.models.Flip;
 import com.flipper2.models.Transaction;
 
-import net.runelite.api.GrandExchangeOfferState;
 import net.runelite.client.RuneLite;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -16,7 +15,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -129,32 +127,6 @@ public class Persistor
 		return result;
 	}
 
-	private static Instant extractLegacyInstant(JsonObject obj, String field)
-	{
-		if (!obj.has(field) || obj.get(field).isJsonNull())
-		{
-			return null;
-		}
-
-		JsonElement element = obj.get(field);
-		if (element.isJsonPrimitive() && element.getAsJsonPrimitive().isString())
-		{
-			try
-			{
-				java.util.Date legacyDate = new Gson().fromJson(element, java.util.Date.class);
-				obj.remove(field);
-				return legacyDate != null ? legacyDate.toInstant() : null;
-			}
-			catch (Exception e)
-			{
-				obj.remove(field);
-				return null;
-			}
-		}
-
-		return null;
-	}
-
 	public static boolean saveBuys(List<Transaction> buys)
 	{
 		try
@@ -196,68 +168,21 @@ public class Persistor
 	private static List<Transaction> loadTransactions(String filename) throws IOException
 	{
 		ParsedFile parsed = readFile(filename);
-		List<Transaction> transactions = new ArrayList<>();
-
-		for (JsonElement element : parsed.data)
-		{
-			JsonObject obj = element.getAsJsonObject();
-
-			if (parsed.isLegacyFormat)
-			{
-				if (obj.has("quantity"))
-				{
-					obj.addProperty("finQuantity", obj.get("quantity").getAsInt());
-				}
-				if (obj.has("totalQuantity"))
-				{
-					obj.addProperty("initQuantity", obj.get("totalQuantity").getAsInt());
-				}
-			}
-
-			Transaction transaction = gson.fromJson(obj, Transaction.class);
-
-			if (parsed.isLegacyFormat)
-			{
-
-				if (obj.has("isFlipped") && obj.get("isFlipped").getAsBoolean() && !obj.has("flippedQuantity"))
-				{
-					transaction.setFlippedQuantity(transaction.getFinQuantity());
-				}
-
-				boolean completedFull = transaction.getFinQuantity() == transaction.getInitQuantity();
-				if (transaction.isBuy())
-				{
-					transaction.setCurrentState(completedFull ? GrandExchangeOfferState.BOUGHT : GrandExchangeOfferState.CANCELLED_BUY);
-				}
-				else
-				{
-					transaction.setCurrentState(completedFull ? GrandExchangeOfferState.SOLD : GrandExchangeOfferState.CANCELLED_SELL);
-				}
-
-				if (transaction.getCompletedTime() == null && transaction.isComplete())
-				{
-					transaction.setCompletedTime(transaction.getCreatedTime());
-				}
-
-				if (!transaction.isBuy())
-				{
-					transaction.setInitTaxPer(GrandExchange.calculateTaxPerItem(transaction.getItemId(), transaction.getInitPricePer(), transaction.getCreatedTime()));
-					transaction.setInitTax(transaction.getInitTaxPer() * transaction.getInitQuantity());
-
-					transaction.setFinTaxPer(GrandExchange.calculateTaxPerItem(transaction.getItemId(), transaction.getFinPricePer(), transaction.getCreatedTime()));
-					transaction.setFinTax(transaction.getFinTaxPer() * transaction.getFinQuantity());
-				}
-
-				transaction.setInitTotal(((long) transaction.getInitPricePer() * transaction.getInitQuantity()) - transaction.getInitTax());
-				transaction.setFinTotal(((long) transaction.getFinPricePer() * transaction.getFinQuantity()) - transaction.getFinTax());
-			}
-
-			transactions.add(transaction);
-		}
 
 		if (parsed.isLegacyFormat)
 		{
-			Collections.reverse(transactions);
+			List<Flip> flips = loadFlips();
+			boolean isBuy = filename.equals(BUYS_JSON_FILE);
+
+			return DataMigrator.migrateLegacyTransactions(parsed.data, flips, isBuy);
+		}
+
+		List<Transaction> transactions = new ArrayList<>();
+		for (JsonElement element : parsed.data)
+		{
+			JsonObject obj = element.getAsJsonObject();
+			Transaction transaction = gson.fromJson(obj, Transaction.class);
+			transactions.add(transaction);
 		}
 
 		return transactions;
@@ -280,64 +205,28 @@ public class Persistor
 	public static List<Flip> loadFlips() throws IOException
 	{
 		ParsedFile parsed = readFile(FLIPS_JSON_FILE);
-		List<Flip> flips = new ArrayList<>();
 
+		if (parsed.isLegacyFormat)
+		{
+			return DataMigrator.migrateLegacyFlips(parsed.data);
+		}
+
+		List<Flip> flips = new ArrayList<>();
 		for (JsonElement element : parsed.data)
 		{
 			JsonObject obj = element.getAsJsonObject();
-			Flip flip;
+			Flip flip = gson.fromJson(obj, Flip.class);
 
-			if (parsed.isLegacyFormat)
+			if (flip.getCreatedAt() == null)
 			{
-				Instant legacyCreatedAt = extractLegacyInstant(obj, "createdAt");
-				Instant legacyUpdatedAt = extractLegacyInstant(obj, "updatedAt");
-
-				flip = gson.fromJson(obj, Flip.class);
-
-				if (legacyCreatedAt != null)
-				{
-					flip.setCreatedAt(legacyCreatedAt);
-				}
-				if (legacyUpdatedAt != null)
-				{
-					flip.setUpdatedAt(legacyUpdatedAt);
-				}
-				if (flip.getCreatedAt() == null)
-				{
-					flip.setCreatedAt(Instant.now());
-				}
-				if (flip.getUpdatedAt() == null)
-				{
-					flip.setUpdatedAt(flip.getCreatedAt());
-				}
-
-				int taxPerItem = GrandExchange.calculateTaxPerItem(flip.getItemId(), flip.getSellPrice(), flip.getCreatedAt());
-				flip.setTax(taxPerItem * flip.getQuantity());
-				flip.setTaxPerItem(taxPerItem);
-
-				flip.setTotalBuy((long) flip.getBuyPrice() * flip.getQuantity());
-				flip.setTotalSell((long) flip.getSellPrice() * flip.getQuantity());
-				flip.setTotalProfit(flip.getTotalSell() - flip.getTotalBuy() - flip.getTax());
-				flip.setProfitPerItem(flip.getQuantity() > 0 ? (int) (flip.getTotalProfit() / flip.getQuantity()) : 0);
-				flip.setMarginCheck(flip.getQuantity() == 1 && flip.getBuyPrice() >= flip.getSellPrice());
+				flip.setCreatedAt(Instant.now());
 			}
-			else
+			if (flip.getUpdatedAt() == null)
 			{
-				flip = gson.fromJson(obj, Flip.class);
-
-				if (flip.getCreatedAt() == null)
-				{
-					flip.setCreatedAt(Instant.now());
-				}
-				if (flip.getUpdatedAt() == null)
-				{
-					flip.setUpdatedAt(flip.getCreatedAt());
-				}
+				flip.setUpdatedAt(flip.getCreatedAt());
 			}
-
 			flips.add(flip);
 		}
-
 		return flips;
 	}
 }

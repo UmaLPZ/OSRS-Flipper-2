@@ -101,6 +101,12 @@ public class FlipperPlugin extends Plugin
 			this.sellsController = new SellsController(itemManager, config, cThread);
 			this.flipsController = new FlipsController(itemManager, config, cThread);
 
+			this.flipsController.setTransactionAccess(
+				this.buysController::getTransactions,
+				this.buysController::saveTransactions,
+				this.sellsController::getTransactions,
+				this.sellsController::saveTransactions
+			);
 
 			this.flipsController.setRefreshFlipsRunnable(() -> {
 				this.flipsController.repairFlips(
