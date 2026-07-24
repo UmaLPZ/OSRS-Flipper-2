@@ -1,6 +1,8 @@
 package com.flipper2.models;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Setter;
 import net.runelite.api.GrandExchangeOffer;
 import net.runelite.api.GrandExchangeOfferState;
 
@@ -31,7 +33,10 @@ public class Transaction
 	private int finTax;
 	private long initTotal;
 	private long finTotal;
+
+	@Setter(AccessLevel.NONE)
 	private boolean isFlipped;
+
 	private int flippedQuantity;
 	private boolean hasCancelledOnce = false;
 	private GrandExchangeOfferState currentState;
@@ -83,6 +88,16 @@ public class Transaction
 		this.finTotal = ((long) this.finPricePer * this.finQuantity) - this.finTax;
 	}
 
+	/**
+	 * Hardened setter that guarantees the isFlipped state remains in sync
+	 * with the flipped quantity.
+	 */
+	public void setFlippedQuantity(int flippedQuantity)
+	{
+		this.flippedQuantity = flippedQuantity;
+		this.isFlipped = (this.flippedQuantity >= this.finQuantity);
+	}
+
 	public Transaction updateTransaction(GrandExchangeOffer offer)
 	{
 		this.finQuantity = offer.getQuantitySold();
@@ -127,10 +142,5 @@ public class Transaction
 	public String describeTransaction()
 	{
 		return String.valueOf(this.finQuantity) + " " + this.itemName + "(s)";
-	}
-
-	public void setIsFlipped(boolean isFlipped)
-	{
-		this.isFlipped = isFlipped;
 	}
 }
