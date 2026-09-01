@@ -35,7 +35,6 @@ import net.runelite.client.game.ItemManager;
 public class FlipsController
 {
 	@Getter
-	@Setter
 	private List<Flip> flips = new ArrayList<Flip>();
 	private List<Flip> filteredFlips = new ArrayList<Flip>();
 	private FlipPage flipPage;
@@ -239,23 +238,18 @@ public class FlipsController
 			ItemComposition itemComp = itemManager.getItemComposition(flip.getItemId());
 			flip.setItemName(itemComp.getName());
 		}
-		String itemName = flip.getItemName();
 
-		if (this.searchText != null &&
-			itemName.toLowerCase().contains(this.searchText.toLowerCase()))
+		if (this.searchText == null || this.searchText.isEmpty())
 		{
 			return true;
 		}
-		else if (this.searchText != null && !this.searchText.isEmpty())
-		{
-			return false;
-		}
 
-		return true;
+		return flip.getItemName().toLowerCase().contains(this.searchText.toLowerCase());
 	}
 
-	private void removeFlipsBySellId(UUID sellId, List<Transaction> buys)
+	private boolean removeFlipsBySellId(UUID sellId, List<Transaction> buys)
 	{
+		boolean removedAny = false;
 		Iterator<Flip> it = flips.iterator();
 		while (it.hasNext())
 		{
@@ -270,8 +264,10 @@ public class FlipsController
 					}
 				}
 				it.remove();
+				removedAny = true;
 			}
 		}
+		return removedAny;
 	}
 
 	public void upsertFlip(Transaction sell, List<Transaction> buys)
@@ -281,11 +277,14 @@ public class FlipsController
 			return;
 		}
 
+		boolean removedExistingFlips = false;
 		if (sell.getFlippedQuantity() > 0)
 		{
-			removeFlipsBySellId(sell.getId(), buys);
+			removedExistingFlips = removeFlipsBySellId(sell.getId(), buys);
 			sell.setFlippedQuantity(0);
 		}
+
+		boolean addedNewFlip = false;
 
 		if (this.isTrackingFlips)
 		{
@@ -305,6 +304,7 @@ public class FlipsController
 					{
 						Flip flip = new Flip(buy, sell, amountToTake);
 						this.addFlip(flip);
+						addedNewFlip = true;
 
 						buy.setFlippedQuantity(buy.getFlippedQuantity() + amountToTake);
 						sell.setFlippedQuantity(sell.getFlippedQuantity() + amountToTake);
@@ -313,6 +313,13 @@ public class FlipsController
 					}
 				}
 			}
+		}
+
+		if (removedExistingFlips && !addedNewFlip)
+		{
+			this.totalProfit = calculateTotalProfit(flips);
+			Persistor.saveFlips(this.flips);
+			this.buildView();
 		}
 	}
 

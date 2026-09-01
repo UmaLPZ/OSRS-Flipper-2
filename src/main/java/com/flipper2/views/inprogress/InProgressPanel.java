@@ -59,7 +59,7 @@ public class InProgressPanel extends JPanel
 	private JLabel newLeftLabel(String text)
 	{
 		JLabel newLeftJLabel = new JLabel(text);
-		newLeftJLabel.setVerticalAlignment(JLabel.CENTER);
+		newLeftJLabel.setHorizontalAlignment(JLabel.CENTER);
 		newLeftJLabel.setVerticalAlignment(JLabel.CENTER);
 		newLeftJLabel.setForeground(Color.white);
 		newLeftJLabel.setBorder(new EmptyBorder(4, 2, 3, 2));
@@ -96,7 +96,6 @@ public class InProgressPanel extends JPanel
 		labelPanel.add(pricePerPanelLabel);
 
 		column1.add(labelPanel, BorderLayout.CENTER);
-
 
 		JPanel column2 = new JPanel(new BorderLayout());
 		column2.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -199,7 +198,6 @@ public class InProgressPanel extends JPanel
 		titlePanel.add(offerInitLabel);
 		titlePanel.add(offerCurrentLabel);
 
-
 		JPanel centerPanel = new JPanel(new BorderLayout());
 		centerPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		centerPanel.add(titlePanel, BorderLayout.NORTH);
@@ -241,7 +239,6 @@ public class InProgressPanel extends JPanel
 			progressBar.setForeground(ColorScheme.PROGRESS_ERROR_COLOR);
 		}
 
-
 		JPanel contentPanel1 = (JPanel) ((JPanel) itemInfoContainer.getComponent(1)).getComponent(0);
 		JPanel contentPanel2 = (JPanel) ((JPanel) itemInfoContainer.getComponent(2)).getComponent(0);
 
@@ -250,11 +247,9 @@ public class InProgressPanel extends JPanel
 		totalValueValue.setText(Numbers.toShortNumber(totalValue));
 		totalValueValue.setToolTipText(Numbers.numberWithCommas(totalValue));
 
-
 		JLabel pricePerValue = (JLabel) ((JPanel) contentPanel1.getComponent(1)).getComponent(0);
 		pricePerValue.setText(Numbers.toShortNumber(price));
 		pricePerValue.setToolTipText(Numbers.numberWithCommas(price));
-
 
 		JLabel spentValue = (JLabel) ((JPanel) contentPanel2.getComponent(0)).getComponent(0);
 		spentValue.setText(Numbers.toShortNumber(spent));

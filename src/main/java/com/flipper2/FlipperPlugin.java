@@ -216,6 +216,7 @@ public class FlipperPlugin extends Plugin
 					sellsController.saveTransactions();
 					List<Transaction> buys = buysController.getTransactions();
 					flipsController.upsertFlip(sell, buys);
+					buysController.saveTransactions();
 				}
 			}
 		}

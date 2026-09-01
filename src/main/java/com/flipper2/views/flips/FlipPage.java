@@ -1,13 +1,7 @@
 package com.flipper2.views.flips;
 
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.border.EmptyBorder;
 import javax.swing.*;
-import javax.swing.SwingConstants;
+import javax.swing.border.EmptyBorder;
 
 import java.awt.*;
 
@@ -17,6 +11,7 @@ import java.util.function.Consumer;
 
 import com.flipper2.helpers.Numbers;
 import com.flipper2.helpers.UiUtilities;
+import com.flipper2.helpers.Log;
 import com.flipper2.views.components.SearchBar;
 import com.flipper2.views.components.Toggle;
 
@@ -49,9 +44,12 @@ public class FlipPage extends JPanel
 		this.build(isTrackingFlips);
 		setTotalProfit("0", true);
 	}
-	public void setRefreshFlipsRunnable(Runnable runnable) {
+
+	public void setRefreshFlipsRunnable(Runnable runnable)
+	{
 		this.refreshFlipsRunnable = runnable;
 	}
+
 	public void addFlipPanel(FlipPanel flipPanel)
 	{
 		container.add(flipPanel, BorderLayout.CENTER);
@@ -93,13 +91,10 @@ public class FlipPage extends JPanel
 			{
 				try
 				{
-					boolean isPrompt = true;
-					int input = isPrompt
-						? JOptionPane.showConfirmDialog(
+					int input = JOptionPane.showConfirmDialog(
 						null,
 						"Are you sure you want to reset/repair your flips? Any deleted buys/sells will not be included in the reset/repaired data"
-					)
-						: 0;
+					);
 					if (input == 0)
 					{
 						refreshFlipsRunnable.run();
@@ -107,6 +102,7 @@ public class FlipPage extends JPanel
 				}
 				catch (Exception error)
 				{
+					Log.info("Failed to run flip repair: " + error.getMessage());
 				}
 			}
 		});
@@ -169,7 +165,7 @@ public class FlipPage extends JPanel
 	{
 		try
 		{
-			int totalProfit = Integer.parseInt(totalProfitStr.replace(",", ""));
+			long totalProfit = Integer.parseInt(totalProfitStr.replace(",", ""));
 			String formattedProfit = useShortFormat
 				? Numbers.toShortNumber(totalProfit)
 				: Numbers.numberWithCommas(totalProfit);

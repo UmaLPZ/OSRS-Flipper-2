@@ -162,12 +162,11 @@ public class DataMigrator
 	 */
 	public static List<Flip> repairFlips(List<Transaction> allBuys, List<Transaction> allSells, List<Flip> oldFlips)
 	{
-
-		Map<String, Flip> oldFlipsMap = new HashMap<>();
+		Map<String, List<Flip>> oldFlipsMap = new HashMap<>();
 		for (Flip f : oldFlips)
 		{
 			String uniqueKey = f.getBuyId().toString() + "_" + f.getSellId().toString();
-			oldFlipsMap.put(uniqueKey, f);
+			oldFlipsMap.computeIfAbsent(uniqueKey, k -> new ArrayList<>()).add(f);
 		}
 		List<Flip> repairedFlips = new ArrayList<>();
 
@@ -194,7 +193,8 @@ public class DataMigrator
 			{
 				Transaction buy = allBuys.get(i);
 				String uniqueKey = buy.getId().toString() + "_" + sell.getId().toString();
-				boolean isHistoricalFlip = oldFlipsMap.containsKey(uniqueKey);
+				List<Flip> historicalMatches = oldFlipsMap.get(uniqueKey);
+				boolean isHistoricalFlip = historicalMatches != null && !historicalMatches.isEmpty();
 
 				if (isHistoricalFlip || GrandExchange.checkIsSellAFlipOfBuy(sell, buy))
 				{
@@ -207,7 +207,7 @@ public class DataMigrator
 
 						if (isHistoricalFlip)
 						{
-							Flip old = oldFlipsMap.get(uniqueKey);
+							Flip old = historicalMatches.remove(0);
 							flip.setFlipId(old.getFlipId());
 
 							long timeDifferenceSeconds = Math.abs(old.getCreatedAt().getEpochSecond() - sell.getCreatedTime().getEpochSecond());

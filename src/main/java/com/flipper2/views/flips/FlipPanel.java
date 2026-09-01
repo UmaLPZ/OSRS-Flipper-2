@@ -231,15 +231,15 @@ public class FlipPanel extends JPanel
 
 		JPanel buyTotalPanel = new CustomPanel(new BorderLayout(), true);
 		long totalBuyValue = flip.getTotalBuy();
-		JLabel buyTotalValueLabel = newRightLabel(Numbers.toShortNumber((int) totalBuyValue), ColorScheme.GRAND_EXCHANGE_ALCH);
-		buyTotalValueLabel.setToolTipText(Numbers.numberWithCommas((int) totalBuyValue));
+		JLabel buyTotalValueLabel = newRightLabel(Numbers.toShortNumber(totalBuyValue), ColorScheme.GRAND_EXCHANGE_ALCH);
+		buyTotalValueLabel.setToolTipText(Numbers.numberWithCommas(totalBuyValue));
 		buyTotalPanel.add(buyTotalValueLabel, BorderLayout.CENTER);
 		contentPanel2.add(buyTotalPanel);
 
 		JPanel sellTotalPanel = new CustomPanel(new BorderLayout(), true);
 		long totalSellValue = flip.getTotalSell();
-		JLabel sellTotalValueLabel = newRightLabel(Numbers.toShortNumber((int) totalSellValue), ColorScheme.GRAND_EXCHANGE_ALCH);
-		sellTotalValueLabel.setToolTipText(Numbers.numberWithCommas((int) totalSellValue));
+		JLabel sellTotalValueLabel = newRightLabel(Numbers.toShortNumber(totalSellValue), ColorScheme.GRAND_EXCHANGE_ALCH);
+		sellTotalValueLabel.setToolTipText(Numbers.numberWithCommas(totalSellValue));
 		sellTotalPanel.add(sellTotalValueLabel, BorderLayout.CENTER);
 		contentPanel2.add(sellTotalPanel);
 
@@ -253,8 +253,8 @@ public class FlipPanel extends JPanel
 		JPanel totalProfitPanel = new CustomPanel(new BorderLayout(), true);
 		long totalProfitValue = flip.getTotalProfit();
 		Color profitColor = totalProfitValue > 0 ? ColorScheme.GRAND_EXCHANGE_ALCH : ColorScheme.PROGRESS_ERROR_COLOR;
-		JLabel totalProfitValueLabel = newRightLabel(Numbers.toShortNumber((int) totalProfitValue), profitColor);
-		totalProfitValueLabel.setToolTipText(Numbers.numberWithCommas((int) totalProfitValue));
+		JLabel totalProfitValueLabel = newRightLabel(Numbers.toShortNumber(totalProfitValue), profitColor);
+		totalProfitValueLabel.setToolTipText(Numbers.numberWithCommas(totalProfitValue));
 		totalProfitPanel.add(totalProfitValueLabel, BorderLayout.CENTER);
 		contentPanel2.add(totalProfitPanel);
 

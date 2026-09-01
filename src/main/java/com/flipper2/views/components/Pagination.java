@@ -52,11 +52,11 @@ public class Pagination
 	{
 		JPanel container = new JPanel(new BorderLayout());
 
-		int numberOfPages = (int) Math.round(
+		int numberOfPages = Math.max(1, (int) Math.round(
 			Math.ceil(
 				items.size() * 1.0 / this.itemsPerPage
 			)
-		);
+		));
 
 		JLabel previous = new JLabel("<");
 		previous.setFont(FontManager.getRunescapeBoldFont());

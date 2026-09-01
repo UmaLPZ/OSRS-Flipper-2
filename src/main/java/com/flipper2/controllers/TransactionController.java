@@ -134,21 +134,11 @@ public class TransactionController
 
 	private boolean isRender(Transaction transaction)
 	{
-		String itemName = transaction.getItemName();
-
-		if (
-			this.searchText != null &&
-				itemName.toLowerCase().contains(this.searchText.toLowerCase())
-		)
+		if (this.searchText == null || this.searchText.isEmpty())
 		{
 			return true;
 		}
-		else if (this.searchText != null && !this.searchText.isEmpty())
-		{
-			return false;
-		}
-
-		return true;
+		return transaction.getItemName().toLowerCase().contains(this.searchText.toLowerCase());
 	}
 
 	public void filterList()
