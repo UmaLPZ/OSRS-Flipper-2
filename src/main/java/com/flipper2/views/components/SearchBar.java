@@ -59,7 +59,7 @@ public class SearchBar extends JTextField
 	{
 		super.paintComponent(g);
 
-		if (super.getText().length() > 0 || ph == null)
+		if (super.getText().length() > 0)
 		{
 			return;
 		}

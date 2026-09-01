@@ -39,14 +39,7 @@ public class Tab extends MaterialTab
 		this.group = group;
 		this.content = content;
 
-		if (selected)
-		{
-			select();
-		}
-		else
-		{
-			unselect();
-		}
+		unselect();
 
 		addMouseListener(new MouseAdapter()
 		{

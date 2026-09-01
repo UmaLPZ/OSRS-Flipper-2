@@ -4,7 +4,7 @@ import java.text.NumberFormat;
 
 public class Numbers
 {
-	public static String numberWithCommas(int number)
+	public static String numberWithCommas(long number)
 	{
 		return NumberFormat.getIntegerInstance().format(number);
 	}
@@ -17,14 +17,12 @@ public class Numbers
 	 * @param number The number to shorten.
 	 * @return The shortened number string.
 	 */
-	public static String toShortNumber(int number)
+	public static String toShortNumber(long number)
 	{
 		if (number > -100000 && number < 100000)
 		{
-
 			return numberWithCommas(number);
 		}
-
 
 		String sign = number < 0 ? "-" : "";
 		number = Math.abs(number);
@@ -66,7 +64,6 @@ public class Numbers
 			formatted = formatted.replaceAll("0+$", "");
 			formatted = formatted.replaceAll("\\.$", "");
 		}
-
 		return sign + formatted + suffix;
 	}
 }

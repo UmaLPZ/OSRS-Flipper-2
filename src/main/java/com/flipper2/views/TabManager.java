@@ -15,6 +15,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
 import com.flipper2.helpers.UiUtilities;
+import com.flipper2.helpers.Log;
 import com.flipper2.views.components.Tab;
 import com.flipper2.views.inprogress.InProgressPage;
 import com.flipper2.views.transactions.TransactionPage;
@@ -46,7 +47,7 @@ public class TabManager extends PluginPanel
 		topBar.setLayout(new GridLayout(1, columns));
 
 		JLabel github = new JLabel();
-		github.setToolTipText("Flipper2 Pluggin Github");
+		github.setToolTipText("Flipper2 Plugin Github");
 		github.setHorizontalAlignment(JLabel.RIGHT);
 		github.addMouseListener(new MouseAdapter()
 		{
@@ -61,6 +62,7 @@ public class TabManager extends PluginPanel
 				}
 				catch (Exception error)
 				{
+					Log.info("Failed to open GitHub link: " + error.getMessage());
 				}
 			}
 		});

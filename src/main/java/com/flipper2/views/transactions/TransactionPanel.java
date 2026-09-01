@@ -238,9 +238,9 @@ public class TransactionPanel extends JPanel
 
 		JPanel initTotalPanel = new CustomPanel(new BorderLayout(), true);
 		long initTotalValue = transaction.getInitTotal();
-		String initTotalValueText = Numbers.toShortNumber((int) initTotalValue);
+		String initTotalValueText = Numbers.toShortNumber(initTotalValue);
 		JLabel totalValueValueLabelInit = newRightLabel(initTotalValueText, ColorScheme.GRAND_EXCHANGE_ALCH);
-		totalValueValueLabelInit.setToolTipText(Numbers.numberWithCommas((int) initTotalValue));
+		totalValueValueLabelInit.setToolTipText(Numbers.numberWithCommas(initTotalValue));
 		initTotalPanel.add(totalValueValueLabelInit, BorderLayout.CENTER);
 		contentPanel1.add(initTotalPanel);
 
@@ -284,9 +284,9 @@ public class TransactionPanel extends JPanel
 
 		JPanel finTotalPanel = new CustomPanel(new BorderLayout(), true);
 		long finTotalValue = transaction.getFinTotal();
-		String finTotalValueText = Numbers.toShortNumber((int) finTotalValue);
+		String finTotalValueText = Numbers.toShortNumber(finTotalValue);
 		JLabel totalValueValueLabelFin = newRightLabel(finTotalValueText, ColorScheme.GRAND_EXCHANGE_ALCH);
-		totalValueValueLabelFin.setToolTipText(Numbers.numberWithCommas((int) finTotalValue));
+		totalValueValueLabelFin.setToolTipText(Numbers.numberWithCommas(finTotalValue));
 		finTotalPanel.add(totalValueValueLabelFin, BorderLayout.CENTER);
 		contentPanel2.add(finTotalPanel);
 
