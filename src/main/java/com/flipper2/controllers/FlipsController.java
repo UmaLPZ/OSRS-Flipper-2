@@ -24,7 +24,6 @@ import com.flipper2.views.flips.FlipPanel;
 import com.flipper2.FlipperConfig;
 
 import lombok.Getter;
-import lombok.Setter;
 
 import java.awt.BorderLayout;
 

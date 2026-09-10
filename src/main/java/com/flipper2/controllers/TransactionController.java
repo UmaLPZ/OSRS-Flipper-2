@@ -19,7 +19,7 @@ import com.flipper2.views.transactions.TransactionPage;
 import com.flipper2.views.components.Pagination;
 
 import lombok.Getter;
-import lombok.Setter;
+
 import net.runelite.api.GrandExchangeOffer;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.callback.ClientThread;
@@ -27,7 +27,6 @@ import net.runelite.client.callback.ClientThread;
 public class TransactionController
 {
 	@Getter
-	@Setter
 	protected List<Transaction> transactions = new ArrayList<Transaction>();
 	protected List<Transaction> filteredTransactions = new ArrayList<Transaction>();
 	protected TransactionPage transactionPage;

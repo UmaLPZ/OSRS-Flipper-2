@@ -134,7 +134,7 @@ public class FlipperPlugin extends Plugin
 			.icon(
 				ImageUtil.loadImageResource(
 					getClass(),
-					UiUtilities.flipperNavIcon
+					UiUtilities.FLIPPER_NAV_ICON
 				)
 			)
 			.priority(4)
