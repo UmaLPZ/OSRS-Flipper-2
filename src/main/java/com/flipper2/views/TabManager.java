@@ -66,7 +66,7 @@ public class TabManager extends PluginPanel
 				}
 			}
 		});
-		ImageIcon githubIcon = new ImageIcon(ImageUtil.loadImageResource(getClass(), UiUtilities.githubIcon));
+		ImageIcon githubIcon = new ImageIcon(ImageUtil.loadImageResource(getClass(), UiUtilities.GITHUB_ICON));
 		github.setIcon(githubIcon);
 		topBar.add(github);
 

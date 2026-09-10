@@ -80,7 +80,7 @@ public class FlipPage extends JPanel
 		totalProfitLabel.setHorizontalAlignment(JLabel.CENTER);
 		totalProfitLabel.setForeground(Color.WHITE);
 
-		ImageIcon refreshIcon = new ImageIcon(ImageUtil.loadImageResource(getClass(), UiUtilities.refreshIcon));
+		ImageIcon refreshIcon = new ImageIcon(ImageUtil.loadImageResource(getClass(), UiUtilities.REFRESH_ICON));
 		JLabel refreshFlips = new JLabel();
 		refreshFlips.setToolTipText("Refresh flips");
 		refreshFlips.setIcon(refreshIcon);
@@ -165,7 +165,7 @@ public class FlipPage extends JPanel
 	{
 		try
 		{
-			long totalProfit = Integer.parseInt(totalProfitStr.replace(",", ""));
+			long totalProfit = Long.parseLong(totalProfitStr.replace(",", ""));
 			String formattedProfit = useShortFormat
 				? Numbers.toShortNumber(totalProfit)
 				: Numbers.numberWithCommas(totalProfit);

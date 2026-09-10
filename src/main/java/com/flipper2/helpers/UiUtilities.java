@@ -1,6 +1,5 @@
 package com.flipper2.helpers;
 
-import java.awt.Color;
 import java.awt.Dimension;
 
 import javax.swing.BorderFactory;
@@ -26,10 +25,10 @@ public class UiUtilities
 		return string;
 	}
 
-	public static final String flipperNavIcon = "/flipper_nav_button.png";
-	public static final String deleteX = "/delete_x.png";
-	public static final String refreshIcon = "/refresh.png";
-	public static final String githubIcon = "/github.png";
+	public static final String FLIPPER_NAV_ICON = "/flipper_nav_button.png";
+	public static final String DELETE_X = "/delete_x.png";
+	public static final String REFRESH_ICON = "/refresh.png";
+	public static final String GITHUB_ICON = "/github.png";
 	public static final int ITEMS_PER_PAGE = 15;
 
 
