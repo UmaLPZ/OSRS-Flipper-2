@@ -37,29 +37,10 @@ public class Pagination
 		this.page = 1;
 	}
 
-	public <T> void renderList(List<T> items)
-	{
-		int endIndex = items.size() - (page * itemsPerPage) - 1;
-		if (endIndex < 0)
-		{
-			endIndex = -1;
-		}
-		int startIndex = items.size() - ((page - 1) * itemsPerPage) - 1;
-		for (int i = startIndex; i > endIndex; i--)
-		{
-			this.renderItemCallback.accept(items.get(i));
-		}
-	}
-
 	public <T> void renderFromBeginning(List<T> items)
 	{
 		int startIndex = (page - 1) * itemsPerPage;
-		int endIndex = (page * itemsPerPage) - 1;
-
-		if (endIndex > items.size())
-		{
-			endIndex = items.size();
-		}
+		int endIndex = Math.min(page * itemsPerPage, items.size());
 
 		for (int i = startIndex; i < endIndex; i++)
 		{
@@ -71,11 +52,11 @@ public class Pagination
 	{
 		JPanel container = new JPanel(new BorderLayout());
 
-		int numberOfPages = (int) Math.round(
+		int numberOfPages = Math.max(1, (int) Math.round(
 			Math.ceil(
 				items.size() * 1.0 / this.itemsPerPage
 			)
-		);
+		));
 
 		JLabel previous = new JLabel("<");
 		previous.setFont(FontManager.getRunescapeBoldFont());

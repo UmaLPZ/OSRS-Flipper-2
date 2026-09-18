@@ -5,13 +5,15 @@ import com.flipper2.models.Transaction;
 
 import net.runelite.client.RuneLite;
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,12 +28,12 @@ public class Persistor
 	public static final String SELLS_JSON_FILE = "flipper2-sells.json";
 	public static final String BUYS_JSON_FILE = "flipper2-buys.json";
 	public static final String FLIPS_JSON_FILE = "flipper2-flips.json";
+	private static final int FILE_VERSION = 2;
 
-	public static void setUp(String directoryPath) throws IOException
+	private static class ParsedFile
 	{
-		directory = new File(directoryPath);
-		createDirectory(directory);
-		createRequiredFiles();
+		JsonArray data;
+		boolean isLegacyFormat;
 	}
 
 	public static void setUp() throws IOException
@@ -78,8 +80,10 @@ public class Persistor
 	public static void saveJson(List<?> list, String filename) throws IOException
 	{
 		File file = new File(directory, filename);
-		final String json = gson.toJson(list);
-		Files.write(file.toPath(), json.getBytes());
+		JsonObject root = new JsonObject();
+		root.addProperty("version", FILE_VERSION);
+		root.add("data", gson.toJsonTree(list));
+		Files.write(file.toPath(), gson.toJson(root).getBytes());
 	}
 
 	private static String getFileContent(String filename) throws IOException
@@ -87,6 +91,40 @@ public class Persistor
 		Path filePath = Paths.get(directory.getAbsolutePath(), filename);
 		byte[] fileBytes = Files.readAllBytes(filePath);
 		return new String(fileBytes);
+	}
+
+	private static ParsedFile readFile(String filename) throws IOException
+	{
+		ParsedFile result = new ParsedFile();
+		String jsonString = getFileContent(filename);
+
+		if (jsonString == null || jsonString.trim().isEmpty())
+		{
+			result.data = new JsonArray();
+			result.isLegacyFormat = false;
+			return result;
+		}
+
+		JsonElement root = gson.fromJson(jsonString, JsonElement.class);
+
+		if (root == null || root.isJsonNull())
+		{
+			result.data = new JsonArray();
+			result.isLegacyFormat = false;
+		}
+		else if (root.isJsonArray())
+		{
+			result.data = root.getAsJsonArray();
+			result.isLegacyFormat = true;
+		}
+		else
+		{
+			JsonObject rootObj = root.getAsJsonObject();
+			result.data = rootObj.has("data") ? rootObj.get("data").getAsJsonArray() : new JsonArray();
+			result.isLegacyFormat = false;
+		}
+
+		return result;
 	}
 
 	public static boolean saveBuys(List<Transaction> buys)
@@ -119,30 +157,35 @@ public class Persistor
 
 	public static List<Transaction> loadBuys() throws IOException
 	{
-		String jsonString = getFileContent(BUYS_JSON_FILE);
-		Type type = new TypeToken<List<Transaction>>()
-		{
-		}.getType();
-		List<Transaction> buys = gson.fromJson(jsonString, type);
-		if (buys == null)
-		{
-			return new ArrayList<Transaction>();
-		}
-		return buys;
+		return loadTransactions(BUYS_JSON_FILE);
 	}
 
 	public static List<Transaction> loadSells() throws IOException
 	{
-		String jsonString = getFileContent(SELLS_JSON_FILE);
-		Type type = new TypeToken<List<Transaction>>()
+		return loadTransactions(SELLS_JSON_FILE);
+	}
+
+	private static List<Transaction> loadTransactions(String filename) throws IOException
+	{
+		ParsedFile parsed = readFile(filename);
+
+		if (parsed.isLegacyFormat)
 		{
-		}.getType();
-		List<Transaction> sells = gson.fromJson(jsonString, type);
-		if (sells == null)
-		{
-			return new ArrayList<Transaction>();
+			List<Flip> flips = loadFlips();
+			boolean isBuy = filename.equals(BUYS_JSON_FILE);
+
+			return DataMigrator.migrateLegacyTransactions(parsed.data, flips, isBuy);
 		}
-		return sells;
+
+		List<Transaction> transactions = new ArrayList<>();
+		for (JsonElement element : parsed.data)
+		{
+			JsonObject obj = element.getAsJsonObject();
+			Transaction transaction = gson.fromJson(obj, Transaction.class);
+			transactions.add(transaction);
+		}
+
+		return transactions;
 	}
 
 	public static boolean saveFlips(List<Flip> flips)
@@ -161,14 +204,28 @@ public class Persistor
 
 	public static List<Flip> loadFlips() throws IOException
 	{
-		String jsonString = getFileContent(FLIPS_JSON_FILE);
-		Type type = new TypeToken<List<Flip>>()
+		ParsedFile parsed = readFile(FLIPS_JSON_FILE);
+
+		if (parsed.isLegacyFormat)
 		{
-		}.getType();
-		List<Flip> flips = gson.fromJson(jsonString, type);
-		if (flips == null)
+			return DataMigrator.migrateLegacyFlips(parsed.data);
+		}
+
+		List<Flip> flips = new ArrayList<>();
+		for (JsonElement element : parsed.data)
 		{
-			return new ArrayList<>();
+			JsonObject obj = element.getAsJsonObject();
+			Flip flip = gson.fromJson(obj, Flip.class);
+
+			if (flip.getCreatedAt() == null)
+			{
+				flip.setCreatedAt(Instant.now());
+			}
+			if (flip.getUpdatedAt() == null)
+			{
+				flip.setUpdatedAt(flip.getCreatedAt());
+			}
+			flips.add(flip);
 		}
 		return flips;
 	}

@@ -1,4 +1,3 @@
-
 package com.flipper2.helpers;
 
 import com.flipper2.models.Transaction;
@@ -8,11 +7,18 @@ import net.runelite.api.GrandExchangeOfferState;
 import net.runelite.api.ItemComposition;
 import net.runelite.client.game.ItemManager;
 
+import java.time.Instant;
+
 /**
  * Handles GrandExchange events
  */
 public class GrandExchange
 {
+	public static final double TAX_RATE = 0.02;
+	public static final double OLD_TAX_RATE = 0.01;
+	public static final int MAX_TAX = 5000000;
+	public static final long TAX_CHANGE_EPOCH = 1748514600L;
+
 	public static boolean checkIsBuy(GrandExchangeOfferState state)
 	{
 		return state == GrandExchangeOfferState.BOUGHT ||
@@ -49,7 +55,9 @@ public class GrandExchange
 	/**
 	 * Potentially creates a transaction based on the GrandExchange event
 	 *
-	 * @param newOfferEvent
+	 * @param offer
+	 * @param itemManager
+	 * @param slot
 	 * @return null or newly created transaction
 	 */
 	public static Transaction createTransactionFromOffer(GrandExchangeOffer offer, ItemManager itemManager, int slot)
@@ -78,13 +86,29 @@ public class GrandExchange
 			(!transaction.isComplete() || (transaction.isComplete() && GrandExchange.checkIsComplete(offer.getState()))) &&
 				transaction.getSlot() == slot &&
 				transaction.getItemId() == offer.getItemId() &&
-				transaction.getTotalQuantity() == offer.getTotalQuantity();
+				transaction.getInitQuantity() == offer.getTotalQuantity();
 	}
 
 	public static boolean checkIsSellAFlipOfBuy(Transaction sell, Transaction buy)
 	{
 		boolean isSameItem = sell.getItemId() == buy.getItemId();
-		boolean hasTransactionsBeenFlipped = sell.isFlipped() && buy.isFlipped();
-		return isSameItem && !hasTransactionsBeenFlipped;
+		boolean buyHasStock = buy.getFinQuantity() > buy.getFlippedQuantity();
+		boolean buyBeforeSell = !buy.getCreatedTime().isAfter(sell.getCreatedTime());
+		return isSameItem && buyHasStock && buyBeforeSell;
+	}
+
+	public static int calculateTaxPerItem(int itemId, int pricePer, Instant time)
+	{
+		if (itemId == 13190)
+		{
+			return 0;
+		}
+
+		double applicableRate = time.getEpochSecond() <= TAX_CHANGE_EPOCH
+			? OLD_TAX_RATE
+			: TAX_RATE;
+
+		int taxPerItem = (int) Math.floor(pricePer * applicableRate);
+		return Math.min(taxPerItem, MAX_TAX);
 	}
 }

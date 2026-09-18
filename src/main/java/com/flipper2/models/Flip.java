@@ -1,6 +1,6 @@
 package com.flipper2.models;
 
-import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.UUID;
 
 import lombok.Data;
@@ -11,10 +11,7 @@ import lombok.Data;
 @Data
 public class Flip
 {
-	public static final double TAX_RATE = 0.01;
-
 	public UUID flipId;
-	public UUID userId;
 	public UUID buyId;
 	public UUID sellId;
 	public int itemId;
@@ -22,35 +19,44 @@ public class Flip
 	public int quantity;
 	public int buyPrice;
 	public int sellPrice;
-	private Timestamp updatedAt;
-	private Timestamp createdAt;
+	public int tax;
+	public int taxPerItem;
+	public long totalBuy;
+	public long totalSell;
+	public long totalProfit;
+	public int profitPerItem;
+	public boolean isMarginCheck;
+	private Instant createdAt;
+	private Instant updatedAt;
 
 	public Flip()
 	{
 	}
 
-	public Flip(Transaction buy, Transaction sell)
+	public Flip(Transaction buy, Transaction sell, int flipQuantity)
 	{
 		this.flipId = UUID.randomUUID();
 		this.buyId = buy.id;
 		this.sellId = sell.id;
 		this.itemId = sell.getItemId();
 		this.itemName = sell.getItemName();
-		this.quantity = sell.getQuantity();
+
+		this.quantity = flipQuantity;
 		this.buyPrice = buy.getFinPricePer();
 		this.sellPrice = sell.getFinPricePer();
 
-		this.updatedAt = new Timestamp(System.currentTimeMillis());
-		this.createdAt = new Timestamp(System.currentTimeMillis());
-	}
+		this.taxPerItem = sell.getFinTaxPer();
+		this.tax = this.taxPerItem * this.quantity;
 
-	/**
-	 * We know a flip is a margin check when only 1 is bought and it's bought for a
-	 * greater to or equal price than sold for
-	 */
-	public boolean isMarginCheck()
-	{
-		return quantity == 1 && buyPrice >= sellPrice;
+		this.totalBuy = (long) this.buyPrice * this.quantity;
+		this.totalSell = (long) this.sellPrice * this.quantity;
+		this.totalProfit = this.totalSell - this.totalBuy - this.tax;
+		this.profitPerItem = this.sellPrice - this.buyPrice - this.taxPerItem;
+
+		this.isMarginCheck = this.quantity == 1 && this.buyPrice >= this.sellPrice;
+
+		this.createdAt = sell.getCreatedTime();
+		this.updatedAt = sell.getCreatedTime();
 	}
 
 	public String describeFlip()
@@ -58,45 +64,23 @@ public class Flip
 		return String.valueOf(quantity) + " " + this.itemName + "(s)";
 	}
 
-	/**
-	 * We only concern ourselves with the amount sold (ignore extra bought and kept)
-	 *
-	 * @return profit of flip
-	 */
-
-	/**
-	 * The GE floors tax per item.
-	 *
-	 * @return tax per item of flip
-	 */
-	public int getTax()
-	{
-		int taxPerItem = (int) Math.floor((double) this.sellPrice * TAX_RATE);
-		return Math.min(taxPerItem, Transaction.MAX_TAX);
-	}
-
-	/**
-	 * Gets the total tax of the sale
-	 *
-	 * @return total tax of sale
-	 */
 	public int getTotalTax()
 	{
-		return getTax() * quantity;
+		return this.tax;
 	}
 
-	public int getTotalProfit()
+	public long getTotalProfit()
 	{
-		return (sellPrice - buyPrice) * quantity - getTotalTax();
+		return this.totalProfit;
 	}
 
-	public int getTotalBuy()
+	public long getTotalBuy()
 	{
-		return buyPrice * quantity;
+		return this.totalBuy;
 	}
 
-	public int getTotalSell()
+	public long getTotalSell()
 	{
-		return sellPrice * quantity;
+		return this.totalSell;
 	}
 }

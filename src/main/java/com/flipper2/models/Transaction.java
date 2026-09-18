@@ -1,6 +1,8 @@
 package com.flipper2.models;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Setter;
 import net.runelite.api.GrandExchangeOffer;
 import net.runelite.api.GrandExchangeOfferState;
 
@@ -15,29 +17,35 @@ import com.flipper2.helpers.GrandExchange;
 @Data
 public class Transaction
 {
-	public static final double TAX_RATE = 0.01;
-	public static final int MAX_TAX = 5000000;
-
 	public final UUID id;
-	private int quantity;
-	private int totalQuantity;
 	private int itemId;
-	private int finPricePer;
-	private int initPricePer;
-	private int slot;
 	private String itemName;
 	private boolean isBuy;
 	private boolean isComplete;
+	private int slot;
+	private int initQuantity;
+	private int finQuantity;
+	private int initPricePer;
+	private int finPricePer;
+	private int initTaxPer;
+	private int initTax;
+	private int finTaxPer;
+	private int finTax;
+	private long initTotal;
+	private long finTotal;
+
+	@Setter(AccessLevel.NONE)
 	private boolean isFlipped;
-	private boolean isAlched;
-	private Instant completedTime;
-	private Instant createdTime;
+
+	private int flippedQuantity;
 	private boolean hasCancelledOnce = false;
 	private GrandExchangeOfferState currentState;
+	private Instant createdTime;
+	private Instant completedTime;
 
 	public Transaction(
-		int quantity,
-		int totalQuantity,
+		int finQuantity,
+		int initQuantity,
 		int itemId,
 		int finPricePer,
 		int initPricePer,
@@ -48,8 +56,8 @@ public class Transaction
 	)
 	{
 		id = UUID.randomUUID();
-		this.quantity = quantity;
-		this.totalQuantity = totalQuantity;
+		this.finQuantity = finQuantity;
+		this.initQuantity = initQuantity;
 		this.itemId = itemId;
 		this.finPricePer = finPricePer;
 		this.initPricePer = initPricePer;
@@ -59,12 +67,40 @@ public class Transaction
 		this.isComplete = isComplete;
 		this.createdTime = Instant.now();
 		this.isFlipped = false;
+		this.flippedQuantity = 0;
 		this.hasCancelledOnce = false;
+
+		this.initTaxPer = 0;
+		this.initTax = 0;
+		this.finTaxPer = 0;
+		this.finTax = 0;
+
+		if (!this.isBuy)
+		{
+			this.initTaxPer = GrandExchange.calculateTaxPerItem(this.itemId, this.initPricePer, this.createdTime);
+			this.initTax = this.initTaxPer * this.initQuantity;
+
+			this.finTaxPer = GrandExchange.calculateTaxPerItem(this.itemId, this.finPricePer, this.createdTime);
+			this.finTax = this.finTaxPer * this.finQuantity;
+		}
+
+		this.initTotal = ((long) this.initPricePer * this.initQuantity) - this.initTax;
+		this.finTotal = ((long) this.finPricePer * this.finQuantity) - this.finTax;
+	}
+
+	/**
+	 * Hardened setter that guarantees the isFlipped state remains in sync
+	 * with the flipped quantity.
+	 */
+	public void setFlippedQuantity(int flippedQuantity)
+	{
+		this.flippedQuantity = flippedQuantity;
+		this.isFlipped = (this.flippedQuantity >= this.finQuantity);
 	}
 
 	public Transaction updateTransaction(GrandExchangeOffer offer)
 	{
-		this.quantity = offer.getQuantitySold();
+		this.finQuantity = offer.getQuantitySold();
 		this.currentState = offer.getState();
 
 		if (offer.getQuantitySold() > 0)
@@ -75,6 +111,14 @@ public class Transaction
 		{
 			this.finPricePer = 0;
 		}
+
+		if (!this.isBuy)
+		{
+			this.finTaxPer = GrandExchange.calculateTaxPerItem(this.itemId, this.finPricePer, this.createdTime);
+			this.finTax = this.finTaxPer * this.finQuantity;
+		}
+
+		this.finTotal = ((long) this.finPricePer * this.finQuantity) - this.finTax;
 
 		boolean isCancelState = GrandExchange.checkIsCancelState(offer.getState());
 
@@ -97,28 +141,6 @@ public class Transaction
 
 	public String describeTransaction()
 	{
-		return String.valueOf(this.quantity) + " " + this.itemName + "(s)";
-	}
-
-	public void setIsFlipped(boolean isFlipped)
-	{
-		this.isFlipped = isFlipped;
-	}
-
-
-	public int getTax()
-	{
-		if (this.isBuy)
-		{
-			return 0;
-		}
-
-		int tax = (int) Math.floor(this.finPricePer * TAX_RATE);
-		return Math.min(tax, MAX_TAX);
-	}
-
-	public int getTotalTax()
-	{
-		return getTax() * this.quantity;
+		return String.valueOf(this.finQuantity) + " " + this.itemName + "(s)";
 	}
 }

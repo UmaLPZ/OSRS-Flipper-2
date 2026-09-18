@@ -100,7 +100,24 @@ public class FlipperPlugin extends Plugin
 			this.buysController = new BuysController(itemManager, config, cThread);
 			this.sellsController = new SellsController(itemManager, config, cThread);
 			this.flipsController = new FlipsController(itemManager, config, cThread);
+
+			this.flipsController.setTransactionAccess(
+				this.buysController::getTransactions,
+				this.buysController::saveTransactions,
+				this.sellsController::getTransactions,
+				this.sellsController::saveTransactions
+			);
+
+			this.flipsController.setRefreshFlipsRunnable(() -> {
+				this.flipsController.repairFlips(
+					buysController.getTransactions(),
+					sellsController.getTransactions()
+				);
+				buysController.saveTransactions();
+				sellsController.saveTransactions();
+			});
 			this.changeToLoggedInView();
+			this.saveAll();
 
 		}
 		catch (Exception e)
@@ -117,7 +134,7 @@ public class FlipperPlugin extends Plugin
 			.icon(
 				ImageUtil.loadImageResource(
 					getClass(),
-					UiUtilities.flipperNavIcon
+					UiUtilities.FLIPPER_NAV_ICON
 				)
 			)
 			.priority(4)
@@ -185,8 +202,6 @@ public class FlipperPlugin extends Plugin
 				if (buy != null)
 				{
 					buysController.saveTransactions();
-					List<Transaction> sells = sellsController.getTransactions();
-					flipsController.upsertFlip(buy, sells);
 				}
 			}
 		}
@@ -201,6 +216,7 @@ public class FlipperPlugin extends Plugin
 					sellsController.saveTransactions();
 					List<Transaction> buys = buysController.getTransactions();
 					flipsController.upsertFlip(sell, buys);
+					buysController.saveTransactions();
 				}
 			}
 		}
